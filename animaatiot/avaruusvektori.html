@@ -1,0 +1,525 @@
+<!doctype html>
+<html lang="fi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Avaruusvektori</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=STIX+Two+Text:ital,wght@0,400;0,600;1,400;1,700&display=swap">
+<style>
+/* Asettelu: kone, kompleksitaso ja käyrät rinnakkain (kapealla allekkain), säätimet ja tehtävät alla. Värit kirjan kuvista. */
+:root {
+  --paper: #fbfbf8;
+  --panel: #f2f3ef;
+  --ink: #1d2128;
+  --muted: #5d6470;
+  --rule: #d9dbd4;
+  --iron: #e6e6e3;      /* kirjan harmaa rautaosille */
+  --magnet: #bfbfbf;
+  --pa: #d0242b;        /* a-vaihe, kirjan punainen */
+  --pb: #17803a;        /* b-vaihe, kirjan vihreä */
+  --pc: #1f3fc4;        /* c-vaihe, kirjan sininen */
+  --wave: #1f3fc4;
+  --accent: #1f3fc4;
+  --font-body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --font-math: "STIX Two Text", "Times New Roman", Times, serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #15181d; --panel: #1d2128; --ink: #e8eaee; --muted: #9aa2ad; --rule: #333944;
+    --iron: #2b3038; --magnet: #59606c; --pa: #ff6b6b; --pb: #5fce80; --pc: #7f9bff; --wave: #7f9bff; --accent: #7f9bff;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #15181d; --panel: #1d2128; --ink: #e8eaee; --muted: #9aa2ad; --rule: #333944;
+  --iron: #2b3038; --magnet: #59606c; --pa: #ff6b6b; --pb: #5fce80; --pc: #7f9bff; --wave: #7f9bff; --accent: #7f9bff;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { margin: 0; }
+body {
+  background: var(--paper); color: var(--ink);
+  font: 15px/1.5 var(--font-body);
+  padding-inline: 16px; padding-block: 20px 40px;
+}
+.wrap { max-width: 1240px; margin: 0 auto; display: grid; gap: 20px; }
+header h1 { font: 600 1.7rem/1.2 var(--font-math); margin: 0 0 4px; text-wrap: balance; }
+header p { margin: 0; color: var(--muted); max-width: 78ch; }
+.m { font-family: var(--font-math); font-style: italic; }
+.m sub, .m sup { font-style: normal; font-size: .72em; }
+.m b { font-weight: 700; }
+.m .up { font-style: normal; }
+.ss { display: inline-flex; flex-direction: column; vertical-align: middle; line-height: .95; font-size: .72em; font-style: normal; margin-left: .05em; }
+.main { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; align-items: start; }
+@media (max-width: 1040px) { .main { grid-template-columns: repeat(2, minmax(0, 1fr)); } .main .plots { grid-column: 1 / -1; } }
+@media (max-width: 640px) { .main { grid-template-columns: minmax(0, 1fr); } }
+.card { background: var(--panel); border: 1px solid var(--rule); border-radius: 6px; padding: 14px; min-width: 0; }
+.card h2 { font: 600 .78rem/1.2 var(--font-body); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 0 0 10px; }
+.card h2 + .seg { margin-bottom: 6px; }
+svg.fig { width: 100%; height: auto; display: block; max-width: 440px; margin-inline: auto; }
+svg.plot { width: 100%; height: auto; display: block; }
+svg text { fill: var(--ink); font-family: var(--font-math); font-size: 14px; }
+svg .it { font-style: italic; }
+svg .b { font-weight: 700; }
+svg .small { font-size: 10px; font-style: normal; font-weight: 400; }
+svg .tick { font-size: 12px; fill: var(--muted); }
+.iron { fill: var(--iron); stroke: var(--ink); stroke-width: 1.2; }
+.gap { fill: var(--paper); stroke: var(--ink); stroke-width: 1.2; }
+.magnet { fill: var(--magnet); stroke: var(--ink); stroke-width: 1; }
+.thin { fill: none; stroke: var(--muted); stroke-width: 1; }
+.axis { fill: none; stroke: var(--ink); stroke-width: 1; }
+.dash { stroke-dasharray: 5 4; }
+.grid { stroke: var(--rule); stroke-width: 1; fill: none; }
+.sa { stroke: var(--pa); } .sb { stroke: var(--pb); } .sc { stroke: var(--pc); } .si { stroke: var(--ink); } .sm { stroke: var(--muted); }
+.fa { fill: var(--pa); } .fb { fill: var(--pb); } .fc { fill: var(--pc); } .fi { fill: var(--ink); } .fm { fill: var(--muted); }
+svg text.fa { fill: var(--pa); } svg text.fb { fill: var(--pb); } svg text.fc { fill: var(--pc); }
+.curve { fill: none; stroke-width: 1.8; stroke-linejoin: round; }
+.sym { fill: var(--paper); stroke: var(--wave); stroke-width: 1.1; }
+.symx { stroke: var(--wave); stroke-width: 1.1; fill: none; }
+.symd { fill: var(--wave); }
+.seg { display: inline-flex; border: 1px solid var(--rule); border-radius: 6px; overflow: hidden; flex-wrap: wrap; }
+.seg button { border: 0; background: var(--paper); color: var(--ink); font: inherit; font-size: .88rem; padding: 5px 10px; cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--wave); color: var(--paper); }
+.seg button + button { border-left: 1px solid var(--rule); }
+button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+table.vals { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; font-size: .92rem; margin-top: 10px; }
+table.vals th, table.vals td { padding: 3px 6px; border-bottom: 1px solid var(--rule); text-align: right; white-space: nowrap; }
+table.vals th { font-weight: 400; text-align: left; }
+.note { color: var(--muted); font-size: .85rem; margin: 8px 0 0; }
+.legend { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: .85rem; color: var(--muted); margin: 4px 0 0; }
+.legend i { display: inline-block; width: 18px; height: 0; border-top: 2px solid; vertical-align: middle; margin-right: 5px; }
+.controls { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 14px 24px; margin-top: 14px; }
+.ctl label { display: flex; justify-content: space-between; gap: 8px; font-size: .92rem; }
+.ctl output { font-variant-numeric: tabular-nums; font-weight: 600; }
+.ctl input[type=range] { width: 100%; accent-color: var(--wave); }
+.bar { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; }
+.bar + .bar { margin-top: 12px; }
+.btn { border: 1px solid var(--wave); background: var(--wave); color: var(--paper); font: 500 .9rem var(--font-body); padding: 6px 14px; border-radius: 6px; cursor: pointer; }
+.btn.ghost { background: transparent; color: var(--wave); }
+.btn:disabled { opacity: .45; cursor: default; }
+.check { display: inline-flex; gap: 6px; align-items: center; font-size: .9rem; }
+.tasks ol { margin: 0; padding-left: 1.3em; display: grid; gap: 10px; }
+.tasks li { max-width: 80ch; }
+.tasks details { margin-top: 3px; }
+.tasks summary { cursor: pointer; color: var(--wave); font-size: .88rem; }
+.tasks details p { margin: 4px 0 0; color: var(--muted); }
+footer { color: var(--muted); font-size: .82rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>Avaruusvektori ja pyörivä kenttä</h1>
+  <p>Kirjan luvut 11 ja 12 sekä luennot 11 ja 12. Kolme vaihevirtaa muodostavat yhden avaruusvektorin <span class="m"><b>i</b><span class="ss"><span>s</span><span>s</span></span></span>. Vaihekäämit oletetaan sinimuotoisesti jaetuiksi, joten vektori kertoo ilmavälin virtajakauman amplitudin ja kentän suunnan. Seuraa, miten vektori ja kenttä muuttuvat, kun vaihevirrat muuttuvat.</p>
+</header>
+
+<div class="main">
+  <section class="card" aria-labelledby="h-mach">
+    <h2 id="h-mach">Kone ja virtajakauma</h2>
+    <svg id="mach" class="fig" viewBox="-185 -185 370 370" role="img" aria-label="Koneen poikkileikkaus: vaiheiden magneettiakselit, sinimuotoinen virtajakauma ja virran avaruusvektori"></svg>
+    <p class="note">Siniset merkit: virtajakauma (piste = virta katsojaan päin, risti = poispäin). Harmaat viivat: staattorivirran tuottama kenttä. Vrt. kirjan kuva 12.3(b).</p>
+  </section>
+
+  <section class="card" aria-labelledby="h-cplx">
+    <h2 id="h-cplx">Kompleksitaso</h2>
+    <div class="seg" role="group" aria-label="Kompleksitason esitys">
+      <button type="button" data-view="fwd" aria-pressed="true">Muunnos</button>
+      <button type="button" data-view="inv" aria-pressed="false">Käänteismuunnos</button>
+    </div>
+    <svg id="cplx" class="fig" viewBox="-185 -185 370 370" role="img" aria-label="Avaruusvektori kompleksitasossa"></svg>
+    <p class="note" id="cplxNote"></p>
+  </section>
+
+  <section class="card plots" aria-labelledby="h-time">
+    <h2 id="h-time">Vaihevirrat</h2>
+    <svg id="tplot" class="plot" viewBox="0 0 380 170" role="img" aria-label="Vaihevirrat ajan funktiona"></svg>
+    <h2 id="h-space" style="margin-top:14px">Magnetomotorinen voima ilmavälissä</h2>
+    <svg id="splot" class="plot" viewBox="0 0 380 170" role="img" aria-label="Vaiheiden magnetomotoriset voimat ja niiden summa kehän kulman funktiona"></svg>
+    <div class="legend"><span><i style="border-color:var(--pa)"></i>a</span><span><i style="border-color:var(--pb)"></i>b</span><span><i style="border-color:var(--pc)"></i>c</span><span><i style="border-color:var(--ink)"></i>summa</span></div>
+    <table class="vals" aria-label="Hetkellisarvot">
+      <tbody>
+        <tr><th><span class="m">i</span><sub>a</sub>, <span class="m">i</span><sub>b</sub>, <span class="m">i</span><sub>c</sub></th><td id="vAbc"></td></tr>
+        <tr><th><span class="m">i</span><sub>0</sub></th><td id="v0"></td></tr>
+        <tr><th><span class="m">i</span><sub>α</sub> + j<span class="m">i</span><sub>β</sub></th><td id="vAb"></td></tr>
+        <tr><th>|<span class="m"><b>i</b><span class="ss"><span>s</span><span>s</span></span></span>| ja kulma <span class="m">θ</span></th><td id="vPol"></td></tr>
+        <tr id="rowDq" hidden><th><span class="m">i</span><sub>d</sub> + j<span class="m">i</span><sub>q</sub></th><td id="vDq"></td></tr>
+      </tbody>
+    </table>
+    <p class="note">Virrat on esitetty suhteessa perusaallon huippuarvoon <span class="m">î</span>.</p>
+  </section>
+</div>
+
+<section class="card" aria-labelledby="h-ctl">
+  <h2 id="h-ctl">Säätimet</h2>
+  <div class="bar">
+    <span class="seg" role="group" aria-label="Vaihevirtojen muoto">
+      <button type="button" data-mode="pos" aria-pressed="true">Myötäjärjestelmä</button>
+      <button type="button" data-mode="neg" aria-pressed="false">Vastajärjestelmä</button>
+      <button type="button" data-mode="free" aria-pressed="false">Omat arvot</button>
+    </span>
+    <button type="button" class="btn" id="play">Pysäytä</button>
+    <button type="button" class="btn ghost" id="step" title="Etene 30 astetta">Askel 30°</button>
+    <span class="seg" role="group" aria-label="Animaation nopeus">
+      <button type="button" data-speed="0.04" aria-pressed="false">Hidas</button>
+      <button type="button" data-speed="0.12" aria-pressed="true">Normaali</button>
+      <button type="button" data-speed="0.4" aria-pressed="false">Nopea</button>
+    </span>
+    <label class="check"><input type="checkbox" id="dq"> Näytä roottorikoordinaatisto (dq)</label>
+  </div>
+  <div class="controls" id="ctlSin">
+    <div class="ctl"><label for="phi"><span>Vaihekulma <span class="m">ϕ</span></span><output id="phiO"></output></label><input type="range" id="phi" min="0" max="360" step="5" value="0"></div>
+    <div class="ctl"><label for="a0"><span>Nollakomponentin amplitudi</span><output id="a0O"></output></label><input type="range" id="a0" min="0" max="0.5" step="0.05" value="0"></div>
+    <div class="ctl"><label for="a5"><span>5. yliaalto <span class="m">î</span><sub>5</sub></span><output id="a5O"></output></label><input type="range" id="a5" min="0" max="0.25" step="0.01" value="0"></div>
+    <div class="ctl"><label for="a7"><span>7. yliaalto <span class="m">î</span><sub>7</sub></span><output id="a7O"></output></label><input type="range" id="a7" min="0" max="0.25" step="0.01" value="0"></div>
+  </div>
+  <div class="controls" id="ctlFree" hidden>
+    <div class="ctl"><label for="ia"><span>Virta <span class="m">i</span><sub>a</sub></span><output id="iaO"></output></label><input type="range" id="ia" min="-1" max="1" step="0.05" value="1"></div>
+    <div class="ctl"><label for="ib"><span>Virta <span class="m">i</span><sub>b</sub></span><output id="ibO"></output></label><input type="range" id="ib" min="-1" max="1" step="0.05" value="-0.5"></div>
+    <div class="ctl"><label for="ic"><span>Virta <span class="m">i</span><sub>c</sub></span><output id="icO"></output></label><input type="range" id="ic" min="-1" max="1" step="0.05" value="-0.5"></div>
+  </div>
+  <p class="note" id="ctlNote"></p>
+</section>
+
+<section class="card tasks" aria-labelledby="h-tasks">
+  <h2 id="h-tasks">Kokeile itse</h2>
+  <ol>
+    <li>Pysäytä animaatio ja etene 30°:n askelin kohtaan <span class="m">ω</span><sub>m</sub><span class="m">t</span> = 0. Lue vaihevirrat ja laske avaruusvektori yhtälöstä (12.1). Vertaa tulosta kuvaan.
+      <details><summary>Vastaus</summary><p>Virrat ovat <span class="m">i</span><sub>a</sub> = <span class="m">î</span> ja <span class="m">i</span><sub>b</sub> = <span class="m">i</span><sub>c</sub> = −<span class="m">î</span>/2. Vaiheiden b ja c osuudet osoittavat vinosti oikealle, ja niiden imaginääriosat kumoutuvat. Summaksi tulee (2/3)(1 + 1/4 + 1/4)<span class="m">î</span> = <span class="m">î</span>. Vektori on a-vaiheen magneettiakselilla ja sen pituus on vaihevirran huippuarvo.</p></details></li>
+    <li>Katso kuvaa "Magnetomotorinen voima ilmavälissä". Miten yhden vaiheen käyrä käyttäytyy? Entä kolmen vaiheen summa?
+      <details><summary>Vastaus</summary><p>Yhden vaiheen jakauma pysyy paikallaan ja sykkii virran tahdissa. Kolmen vaiheen summa on vakioamplitudinen aalto, joka etenee kehää pitkin. Sen huippu on avaruusvektorin suunnassa, ja amplitudi on 3/2 kertaa yhden vaiheen huippuarvo.</p></details></li>
+    <li>Valitse vastajärjestelmä. Mihin suuntaan vektori pyörii? Mikä vaihevirroissa muuttui?
+      <details><summary>Vastaus</summary><p>Vektori pyörii negatiiviseen suuntaan eli myötäpäivään, yhtälö (12.9). Vaiheiden b ja c virrat ovat vaihtaneet paikkaa. Koneen pyörimissuunta vaihtuu siis, kun kaksi vaihetta vaihdetaan keskenään.</p></details></li>
+    <li>Lisää nollakomponentti. Mitä tapahtuu vaihevirroille ja mitä avaruusvektorille?
+      <details><summary>Vastaus</summary><p>Jokaiseen vaihevirtaan summautuu sama osa <span class="m">i</span><sub>0</sub>, mutta avaruusvektori ei muutu. Kolmen vaiheen yhteinen osa ei tuota ilmaväliin kenttää, koska magneettiakseleiden yksikkövektoreiden summa on nolla. Nollakomponentti lasketaan erikseen yhtälöstä (12.2). Tässä se on kolmas yliaalto.</p></details></li>
+    <li>Poista nollakomponentti ja lisää 5. yliaalto. Millainen on vektorin kärjen rata? Lisää sitten 7. yliaalto.
+      <details><summary>Vastaus</summary><p>Viides yliaalto on vastajärjestelmä ja seitsemäs myötäjärjestelmä, yhtälö (12.10). Kumpikin tekee rataan kuusi poikkeamaa kierrosta kohti, koska perusaallon mukana pyörivästä koordinaatistosta katsottuna molemmat pyörivät kuusinkertaisella kulmanopeudella. Valitse roottorikoordinaatisto ja katso, miten <span class="m">i</span><sub>d</sub> ja <span class="m">i</span><sub>q</sub> värähtelevät.</p></details></li>
+    <li>Valitse "Omat arvot" ja aseta <span class="m">i</span><sub>a</sub> = 1 ja <span class="m">i</span><sub>b</sub> = <span class="m">i</span><sub>c</sub> = 0. Miksi vektorin pituus ei ole 1? Saatko virran <span class="m">i</span><sub>a</sub> takaisin käänteismuunnoksella?
+      <details><summary>Vastaus</summary><p>Vektorin pituus on 2/3, koska virroissa on nollakomponentti <span class="m">i</span><sub>0</sub> = 1/3. Käänteismuunnos (12.3) antaa <span class="m">i</span><sub>a</sub> = 2/3 + 1/3 = 1. Tähtikytketyssä koneessa ilman nollajohdinta tämä tilanne ei ole mahdollinen, koska virtojen summan on oltava nolla.</p></details></li>
+    <li>Palaa myötäjärjestelmään, aseta nollakomponentti ja yliaallot nollaksi ja valitse roottorikoordinaatisto. Millä vaihekulmalla <span class="m">ϕ</span> virta on kokonaan q-akselilla? Miksi tämä toimintapiste on kiinnostava?
+      <details><summary>Vastaus</summary><p>Kulmalla <span class="m">ϕ</span> = 90° on <span class="m">i</span><sub>d</sub> = 0 ja <span class="m">i</span><sub>q</sub> = <span class="m">î</span>. Vääntömomentti on verrannollinen virtaan <span class="m">i</span><sub>q</sub>, yhtälö (12.23), joten tällä virralla saadaan suurin momentti. Roottorikoordinaatistossa vektori pysyy paikallaan, vaikka vaihevirrat vaihtelevat sinimuotoisesti.</p></details></li>
+  </ol>
+</section>
+
+<footer>ELEC-C8003 Sähköenergian muunnostekniikka. Avaruusvektori lasketaan yhtälöstä (12.1) ja vaihevirrat yhtälöstä (12.3). Kone on kaksinapainen, joten sähkökulma on sama kuin mekaaninen kulma. Yhtälö- ja kuvanumerot viittaavat kurssikirjan versioon 11/2026.</footer>
+</div>
+
+<script>
+(() => {
+  "use strict";
+  const $ = id => document.getElementById(id);
+  const NS = "http://www.w3.org/2000/svg";
+  const TAU = 2 * Math.PI, A120 = TAU / 3;
+  const fmt = (x, n = 2) => (Math.abs(x) < 0.5 * Math.pow(10, -n) ? 0 : x).toFixed(n).replace(".", ",").replace("-", "−");
+  const reduce = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  // ---- tila ----
+  const P = { mode: "pos", phi: 0, a0: 0, a5: 0, a7: 0, ia: 1, ib: -0.5, ic: -0.5 };
+  let wt = 0, speed = 0.12, playing = !reduce, view = "fwd", showDq = false;
+
+  // Avaruusvektori ja nollakomponentti ajanhetkellä x = ω_m t (yhtälöt 12.7, 12.9 ja 12.10)
+  function vectorAt(x) {
+    if (P.mode === "free") {
+      const re = (2 / 3) * (P.ia - 0.5 * P.ib - 0.5 * P.ic), im = (2 / 3) * (Math.sqrt(3) / 2) * (P.ib - P.ic);
+      return { re, im, i0: (P.ia + P.ib + P.ic) / 3 };
+    }
+    const s = P.mode === "neg" ? -1 : 1, ph = P.phi * Math.PI / 180;
+    const a1 = s * (x + ph), a5 = -s * 5 * x, a7 = s * 7 * x;
+    return {
+      re: Math.cos(a1) + P.a5 * Math.cos(a5) + P.a7 * Math.cos(a7),
+      im: Math.sin(a1) + P.a5 * Math.sin(a5) + P.a7 * Math.sin(a7),
+      i0: P.a0 * Math.cos(3 * x),
+    };
+  }
+  // Vaihevirrat käänteismuunnoksella (yhtälö 12.3)
+  function phases(v) {
+    const pr = k => v.re * Math.cos(k * A120) + v.im * Math.sin(k * A120) + v.i0;
+    return [pr(0), pr(1), pr(2)];
+  }
+
+  // ---- SVG-apufunktiot (koordinaatit: x oikealle, y ylös) ----
+  function el(parent, tag, attrs = {}, text) {
+    const e = document.createElementNS(NS, tag);
+    for (const k in attrs) e.setAttribute(k, attrs[k]);
+    if (text !== undefined) e.textContent = text;
+    parent.appendChild(e); return e;
+  }
+  // Matemaattinen merkintä: "i_a", "#i#_s^s" (lihava), "\\e\\^{j2π/3}" (pysty). Ala- ja yläindeksit ovat pystyjä.
+  function mtext(parent, x, y, s, attrs = {}) {
+    const t = el(parent, "text", Object.assign({ x, y: -y }, attrs));
+    let i = 0, bold = false, up = false, back = 0;
+    const span = (txt, cls, dy, dx) => {
+      const a = { class: cls };
+      if (dy) a.dy = dy; if (dx) a.dx = dx;
+      el(t, "tspan", a, txt);
+    };
+    let shift = 0; // nykyinen pystysiirto
+    while (i < s.length) {
+      const c = s[i];
+      if (c === "#") { bold = !bold; i++; continue; }
+      if (c === "\\") { up = !up; i++; continue; }
+      if (c === "_" || c === "^") {
+        let body; i++;
+        if (s[i] === "{") { const j = s.indexOf("}", i); body = s.slice(i + 1, j); i = j + 1; } else { body = s[i]; i++; }
+        const target = c === "_" ? 3.5 : -6;
+        // pinottu ala- ja yläindeksi: palaa edellisen indeksin leveyden verran
+        span(body, "small", target - shift, back ? -back : 1.5);
+        back = back ? 0 : body.length * 5.2; shift = target;
+        if (!(s[i] === "_" || s[i] === "^")) back = 0;
+        continue;
+      }
+      back = 0;
+      span(c, (up ? "" : "it") + (bold ? " b" : ""), -shift, 0); shift = 0;
+      i++;
+    }
+    return t;
+  }
+  // Nuoli, jonka kärki on kirjan tyylin mukaan kovera
+  function arrow(parent, cls, w = 1.6, head = 1) {
+    const g = el(parent, "g");
+    const ln = el(g, "line", { class: cls, "stroke-width": w, "stroke-linecap": "butt" });
+    const hd = el(g, "path", { class: cls.replace(/\bs([abcim])\b/, "f$1"), stroke: "none" });
+    const L = 10 * head, Wd = 4.2 * head;
+    return {
+      g,
+      set(x1, y1, x2, y2) {
+        const dx = x2 - x1, dy = y2 - y1, len = Math.hypot(dx, dy);
+        if (len < 2.5) { g.setAttribute("visibility", "hidden"); return; }
+        g.removeAttribute("visibility");
+        const ux = dx / len, uy = dy / len, l = Math.min(L, len), k = l / L;
+        const bx = x2 - ux * l, by = y2 - uy * l;
+        ln.setAttribute("x1", x1); ln.setAttribute("y1", -y1); ln.setAttribute("x2", x2 - ux * l * 0.7); ln.setAttribute("y2", -(y2 - uy * l * 0.7));
+        const px = -uy * Wd * k, py = ux * Wd * k, nx = x2 - ux * l * 0.75, ny = y2 - uy * l * 0.75;
+        hd.setAttribute("d", `M${x2} ${-y2} L${bx + px} ${-(by + py)} L${nx} ${-ny} L${bx - px} ${-(by - py)} Z`);
+      },
+    };
+  }
+  const pol = (r, a) => [r * Math.cos(a), r * Math.sin(a)];
+
+  // ---- kone ----
+  const RS = 150, RB = 100, RR = 92, UM = 78;   // staattorin ulkosäde, porauksen säde, roottorin säde, virran mittakaava
+  const mach = $("mach");
+  el(mach, "circle", { r: RS, class: "iron" });
+  el(mach, "circle", { r: RB, class: "gap" });
+  el(mach, "circle", { r: RR, class: "iron" });
+  // kestomagneetit ja d-akseli (näkyvät roottorikoordinaatiston kanssa)
+  const rotorG = el(mach, "g", { hidden: "" });
+  {
+    const r1 = RR - 13, half = 80 * Math.PI / 180;
+    for (const base of [0, Math.PI]) {
+      const a = pol(RR, base - half), b = pol(RR, base + half), c = pol(r1, base + half), d = pol(r1, base - half);
+      el(rotorG, "path", { class: "magnet", d: `M${a[0]} ${-a[1]} A${RR} ${RR} 0 0 0 ${b[0]} ${-b[1]} L${c[0]} ${-c[1]} A${r1} ${r1} 0 0 1 ${d[0]} ${-d[1]} Z` });
+      for (const off of [-50, 0, 50]) {              // magnetointisuunta: d-akselin suuntaan
+        const ang = base + off * Math.PI / 180, out = base === 0;
+        const p = pol(out ? r1 + 1.5 : RR - 1.5, ang), q = pol(out ? RR - 1.5 : r1 + 1.5, ang);
+        arrow(rotorG, "si", 0.9, 0.55).set(p[0], p[1], q[0], q[1]);
+      }
+    }
+    el(rotorG, "line", { class: "axis dash", x1: 0, y1: 0, x2: RS + 12, y2: 0 });
+    arrow(rotorG, "si", 1, 0.8).set(RS + 10, 0, RS + 24, 0);
+  }
+  const dLab = mtext(mach, 0, 0, "\\d", { hidden: "", "text-anchor": "middle" });
+  // staattorivirran kenttäviivat (piirretty suuntaan 0, kierretään vektorin suuntaan)
+  const fluxG = el(mach, "g");
+  for (const [y, ra] of [[24, 139], [58, 127]]) for (const sg of [1, -1]) {
+    // roottorissa suora viiva, ilmavälin yli säteen suuntaan ja staattorin selässä kehää pitkin takaisin
+    const b = Math.asin(y / RR), c = 9, dl = c / ra, f = n => n.toFixed(1);
+    const P = (r, a) => { const q = pol(r, a); return f(q[0]) + " " + f(-sg * q[1]); };
+    el(fluxG, "path", { class: "thin", d: `M${P(RR, Math.PI - b)} L${P(RR, b)} L${P(ra - c, b)} Q${P(ra, b)} ${P(ra, b + dl)} A${ra} ${ra} 0 0 ${sg > 0 ? 0 : 1} ${P(ra, Math.PI - b - dl)} Q${P(ra, Math.PI - b)} ${P(ra - c, Math.PI - b)} Z` });
+    arrow(fluxG, "sm", 1, 0.7).set(-6, sg * y, 8, sg * y);
+  }
+  // magneettiakselit
+  [["sa", "fa", "a"], ["sb", "fb", "b"], ["sc", "fc", "c"]].forEach(([sc, fc, name], k) => {
+    const a = k * A120, p0 = pol(RS, a), p1 = pol(RS + 26, a), pl = pol(RS + 20, a + (k === 0 ? -0.09 : 0.1));
+    arrow(mach, sc, 1.2, 0.85).set(p0[0], p0[1], p1[0], p1[1]);
+    el(mach, "text", { x: pl[0], y: -pl[1] + (k === 0 ? 6 : 4), class: fc, "text-anchor": "middle" }, name);
+  });
+  // virtajakauman merkit porauksen reunalla
+  const NSYM = 24, RSYM = RB + 11, syms = [];
+  for (let k = 0; k < NSYM; k++) {
+    const a = (k + 0.5) * TAU / NSYM, [x, y] = pol(RSYM, a);
+    const g = el(mach, "g", { transform: `translate(${x} ${-y})` });
+    const c = el(g, "circle", { class: "sym", r: 5 });
+    const d = el(g, "circle", { class: "symd", r: 1.4 });
+    const xx = el(g, "path", { class: "symx", d: "" });
+    syms.push({ a, c, d, xx });
+  }
+  const machVec = arrow(mach, "si", 2.6, 1.25);
+  const machLab = mtext(mach, 0, 0, "#i#_s^s");
+
+  // ---- kompleksitaso ----
+  const UC = 70;
+  const cplx = $("cplx");
+  el(cplx, "circle", { r: UC, class: "grid dash" });
+  [1, 2].forEach(k => { const p = pol(172, k * A120); arrow(cplx, "sm", 1, 0.9).set(0, 0, p[0], p[1]); });
+  arrow(cplx, "si", 1, 0.9).set(-172, 0, 176, 0);
+  arrow(cplx, "si", 1, 0.9).set(0, -172, 0, 176);
+  el(cplx, "text", { x: 170, y: 16, "text-anchor": "end" }, "α");
+  el(cplx, "text", { x: 8, y: -166 }, "β");
+  mtext(cplx, -136, 150, "\\e\\^{j2π/3}", {});
+  mtext(cplx, -136, -160, "\\e\\^{j4π/3}", {});
+  const dqG = el(cplx, "g", { hidden: "" });
+  el(dqG, "line", { class: "axis dash", x1: 0, y1: 0, x2: 150, y2: 0 });
+  el(dqG, "line", { class: "axis dash", x1: 0, y1: 0, x2: 0, y2: -150 });
+  arrow(dqG, "si", 1, 0.8).set(148, 0, 160, 0);
+  arrow(dqG, "si", 1, 0.8).set(0, 148, 0, 160);
+  const dqLabD = el(cplx, "text", { hidden: "", "text-anchor": "middle" }, "d");
+  const dqLabQ = el(cplx, "text", { hidden: "", "text-anchor": "middle" }, "q");
+  const locus = el(cplx, "path", { class: "thin", d: "" });
+  // muunnos: osavektorit peräkkäin (kuva 12.2a)
+  const fwdG = el(cplx, "g");
+  const cA = arrow(fwdG, "sa", 2.2), cB = arrow(fwdG, "sb", 2.2), cC = arrow(fwdG, "sc", 2.2);
+  const ext = el(fwdG, "line", { class: "axis dash" });
+  const extLab = el(fwdG, "g");
+  { const t = mtext(extLab, 0, 0, "#i#_s^s", { x: 9 }); el(extLab, "text", { x: -4, y: -6, class: "small", "text-anchor": "middle" }, "3"); el(extLab, "line", { class: "axis", x1: -8, x2: 0, y1: -4, y2: -4 }); el(extLab, "text", { x: -4, y: 5, class: "small", "text-anchor": "middle" }, "2"); t.setAttribute("x", 3); }
+  // käänteismuunnos: projektiot magneettiakseleille (kuva 12.2b)
+  const invG = el(cplx, "g", { hidden: "" });
+  const pr = [0, 1, 2].map(k => ({ seg: el(invG, "line", { class: "s" + "abc"[k], "stroke-width": 3 }), drop: el(invG, "line", { class: "axis dash" }) }));
+  const cplxVec = arrow(cplx, "si", 2.6, 1.25);
+  const cplxLab = mtext(cplx, 0, 0, "#i#_s^s");
+
+  // ---- käyrät ----
+  const PL = { x0: 34, x1: 336, y0: 12, y1: 140 };
+  function mkPlot(svg, ymax, yname, xname) {
+    const yOf = v => (PL.y0 + PL.y1) / 2 - v / ymax * (PL.y1 - PL.y0) / 2, xOf = a => PL.x0 + a / TAU * (PL.x1 - PL.x0);
+    ["0", "π/2", "π", "3π/2", "2π"].forEach((lab, k) => {
+      const x = xOf(k * Math.PI / 2);
+      el(svg, "line", { class: "grid", x1: x, x2: x, y1: PL.y0, y2: PL.y1 });
+      el(svg, "text", { class: "tick", x, y: PL.y1 + 15, "text-anchor": "middle" }, lab);
+    });
+    el(svg, "line", { class: "axis", x1: PL.x0, x2: PL.x1 + 8, y1: yOf(0), y2: yOf(0) });
+    el(svg, "line", { class: "axis", x1: PL.x0, x2: PL.x0, y1: PL.y1, y2: PL.y0 - 6 });
+    for (const v of [-1, 1]) { el(svg, "line", { class: "axis", x1: PL.x0 - 3, x2: PL.x0, y1: yOf(v), y2: yOf(v) }); el(svg, "text", { class: "tick", x: PL.x0 - 6, y: yOf(v) + 4, "text-anchor": "end" }, v < 0 ? "−1" : "1"); }
+    mtext(svg, 4, -(PL.y0 + 8), yname);
+    mtext(svg, PL.x1 + 12, -(yOf(0) + 5), xname);
+    const cur = el(svg, "line", { class: "axis dash", y1: PL.y0, y2: PL.y1 });
+    const paths = ["sa", "sb", "sc", "si"].map((c, k) => el(svg, "path", { class: "curve " + c, "stroke-width": k === 3 ? 2.2 : 1.6 }));
+    const dots = ["fa", "fb", "fc"].map(c => el(svg, "circle", { class: c, r: 3.2 }));
+    return { xOf, yOf, cur, paths, dots };
+  }
+  const tp = mkPlot($("tplot"), 2, "i", "ω_mt");
+  tp.paths[3].setAttribute("visibility", "hidden");
+  const sp = mkPlot($("splot"), 2, "ℱ", "ϑ");
+  sp.dots.forEach(d => d.setAttribute("visibility", "hidden"));
+  const NP = 240;
+  const pathOf = (plot, f) => { let d = ""; for (let k = 0; k <= NP; k++) { const a = k / NP * TAU; d += (k ? "L" : "M") + plot.xOf(a).toFixed(1) + " " + plot.yOf(f(a)).toFixed(1); } return d; };
+
+  // Parametrien muuttuessa: vaihevirtojen käyrät ja vektorin kärjen rata
+  function rebuild() {
+    for (let k = 0; k < 3; k++) tp.paths[k].setAttribute("d", pathOf(tp, a => phases(vectorAt(a))[k]));
+    let d = "";
+    if (P.mode !== "free") for (let k = 0; k <= 720; k++) { const v = vectorAt(k / 720 * TAU); d += (k ? "L" : "M") + (v.re * UC).toFixed(1) + " " + (-v.im * UC).toFixed(1); }
+    locus.setAttribute("d", d);
+    const free = P.mode === "free";
+    tp.cur.toggleAttribute("hidden", free); tp.dots.forEach(c => c.toggleAttribute("hidden", free));
+    $("ctlSin").toggleAttribute("hidden", free); $("ctlFree").toggleAttribute("hidden", !free);
+    $("play").disabled = free; $("step").disabled = free;
+    $("ctlNote").innerHTML = free
+      ? 'Vaihevirrat ovat vakioita, joten vektori pysyy paikallaan. Kokeile esimerkiksi arvoja (1; −0,5; −0,5), (0; 1; −1) ja (1; 1; 1).'
+      : 'Vaihevirrat ovat yhtälön (12.3) mukaiset. Perusaalto on <span class="m"><b>i</b><span class="ss"><span>s</span><span>s</span></span></span> = <span class="m">î</span>e<sup>±j(<span class="m">ω</span><sub>m</sub><span class="m">t</span> + <span class="m">ϕ</span>)</sup>. Nollakomponentti on tässä kolmas yliaalto. Roottorin d-akseli on kulmassa <span class="m">ϑ</span><sub>m</sub> = <span class="m">ω</span><sub>m</sub><span class="m">t</span>.';
+  }
+
+  function draw() {
+    const v = vectorAt(wt), [ia, ib, ic] = phases(v), mag = Math.hypot(v.re, v.im), th = Math.atan2(v.im, v.re);
+    const thm = P.mode === "free" ? 0 : wt;
+    // kone: virtajakauma on verrannollinen lausekkeeseen |i| sin(ϑ − θ), ja kenttä on vektorin suuntainen
+    for (const s of syms) {
+      const k = v.re * Math.sin(s.a) - v.im * Math.cos(s.a);   // k > 0: virta katsojaan päin
+      const r = 5.6 * Math.min(Math.sqrt(Math.abs(k)), 1.25), vis = r > 1.3;
+      s.c.setAttribute("r", vis ? r : 0);
+      s.d.setAttribute("r", vis && k > 0 ? Math.max(0.9, r * 0.3) : 0);
+      const h = r * 0.707;
+      s.xx.setAttribute("d", vis && k < 0 ? `M${-h} ${-h} L${h} ${h} M${-h} ${h} L${h} ${-h}` : "");
+    }
+    fluxG.setAttribute("transform", `rotate(${-th * 180 / Math.PI})`);
+    fluxG.setAttribute("opacity", Math.min(1, mag * 1.2).toFixed(2));
+    machVec.set(0, 0, v.re * UM, v.im * UM);
+    const lab = (t, u) => { const r = Math.max(mag * u * 0.75, 12); t.setAttribute("x", r * Math.cos(th) - 15 * Math.sin(th) - 4); t.setAttribute("y", -(r * Math.sin(th) + 15 * Math.cos(th)) + 5); };
+    lab(machLab, UM);
+    rotorG.toggleAttribute("hidden", !showDq); dLab.toggleAttribute("hidden", !showDq);
+    if (showDq) {
+      rotorG.setAttribute("transform", `rotate(${-thm * 180 / Math.PI})`);
+      const p = pol(RS + 16, thm + 0.12); dLab.setAttribute("x", p[0]); dLab.setAttribute("y", -p[1] + 5);
+    }
+    // kompleksitaso
+    const X = v.re * UC, Y = v.im * UC;
+    cplxVec.set(0, 0, X, Y);
+    lab(cplxLab, UC);
+    fwdG.toggleAttribute("hidden", view !== "fwd"); invG.toggleAttribute("hidden", view !== "inv");
+    if (view === "fwd") {
+      const p1 = [ia * UC, 0], p2 = [p1[0] + ib * UC * Math.cos(A120), ib * UC * Math.sin(A120)], p3 = [p2[0] + ic * UC * Math.cos(2 * A120), p2[1] + ic * UC * Math.sin(2 * A120)];
+      cA.set(0, 0, p1[0], p1[1]); cB.set(p1[0], p1[1], p2[0], p2[1]); cC.set(p2[0], p2[1], p3[0], p3[1]);
+      ext.setAttribute("x1", X); ext.setAttribute("y1", -Y); ext.setAttribute("x2", p3[0]); ext.setAttribute("y2", -p3[1]);
+      const e = pol(mag * 1.5 * UC + 16, th);
+      extLab.setAttribute("transform", `translate(${e[0]} ${-e[1] + 4})`);
+      extLab.toggleAttribute("hidden", mag < 0.12);
+    } else {
+      pr.forEach((o, k) => {
+        const a = k * A120, len = (v.re * Math.cos(a) + v.im * Math.sin(a)) * UC, f = pol(len, a);
+        o.seg.setAttribute("x1", 0); o.seg.setAttribute("y1", 0); o.seg.setAttribute("x2", f[0]); o.seg.setAttribute("y2", -f[1]);
+        o.drop.setAttribute("x1", X); o.drop.setAttribute("y1", -Y); o.drop.setAttribute("x2", f[0]); o.drop.setAttribute("y2", -f[1]);
+      });
+    }
+    dqG.toggleAttribute("hidden", !showDq); dqLabD.toggleAttribute("hidden", !showDq); dqLabQ.toggleAttribute("hidden", !showDq);
+    if (showDq) {
+      dqG.setAttribute("transform", `rotate(${-thm * 180 / Math.PI})`);
+      const pd = pol(168, thm + 0.07), pq = pol(168, thm + Math.PI / 2 + 0.07);
+      dqLabD.setAttribute("x", pd[0]); dqLabD.setAttribute("y", -pd[1] + 5); dqLabQ.setAttribute("x", pq[0]); dqLabQ.setAttribute("y", -pq[1] + 5);
+    }
+    // käyrät
+    const xm = ((wt % TAU) + TAU) % TAU, xc = tp.xOf(xm);
+    tp.cur.setAttribute("x1", xc); tp.cur.setAttribute("x2", xc);
+    [ia, ib, ic].forEach((val, k) => { tp.dots[k].setAttribute("cx", xc); tp.dots[k].setAttribute("cy", tp.yOf(val)); });
+    [ia, ib, ic].forEach((val, k) => sp.paths[k].setAttribute("d", pathOf(sp, a => val * Math.cos(a - k * A120))));
+    sp.paths[3].setAttribute("d", pathOf(sp, a => 1.5 * (v.re * Math.cos(a) + v.im * Math.sin(a))));
+    const tha = (th + TAU) % TAU, xs = sp.xOf(tha);
+    sp.cur.setAttribute("x1", xs); sp.cur.setAttribute("x2", xs); sp.cur.toggleAttribute("hidden", mag < 0.02);
+    // lukuarvot
+    $("vAbc").textContent = `${fmt(ia)}; ${fmt(ib)}; ${fmt(ic)}`;
+    $("v0").textContent = fmt(v.i0);
+    $("vAb").textContent = `${fmt(v.re)} ${v.im < -0.005 ? "−" : "+"} j${fmt(Math.abs(v.im))}`;
+    $("vPol").textContent = mag < 0.005 ? "0,00" : `${fmt(mag)}; ${fmt(tha * 180 / Math.PI, 0)}°`;
+    $("rowDq").toggleAttribute("hidden", !showDq);
+    if (showDq) { const d = v.re * Math.cos(thm) + v.im * Math.sin(thm), q = -v.re * Math.sin(thm) + v.im * Math.cos(thm); $("vDq").textContent = `${fmt(d)} ${q < -0.005 ? "−" : "+"} j${fmt(Math.abs(q))}`; }
+    $("cplxNote").innerHTML = view === "fwd"
+      ? 'Vaiheiden osuudet <span class="m">i</span><sub>a</sub>, <span class="m">i</span><sub>b</sub>e<sup>j2π/3</sup> ja <span class="m">i</span><sub>c</sub>e<sup>j4π/3</sup> lasketaan peräkkäin yhteen, ja summa kerrotaan luvulla 2/3. Vrt. kuva 12.2(a).'
+      : 'Vektorin projektiot magneettiakseleille ovat <span class="m">i</span><sub>a</sub> − <span class="m">i</span><sub>0</sub>, <span class="m">i</span><sub>b</sub> − <span class="m">i</span><sub>0</sub> ja <span class="m">i</span><sub>c</sub> − <span class="m">i</span><sub>0</sub>. Vrt. kuva 12.2(b).';
+  }
+
+  // ---- säätimet ----
+  const outFmt = { phi: v => fmt(v, 0) + "°", a0: v => fmt(v), a5: v => fmt(v), a7: v => fmt(v), ia: v => fmt(v), ib: v => fmt(v), ic: v => fmt(v) };
+  function readCtl() { for (const id in outFmt) { P[id] = +$(id).value; $(id + "O").textContent = outFmt[id](P[id]); } }
+  Object.keys(outFmt).forEach(id => $(id).addEventListener("input", () => { readCtl(); rebuild(); draw(); }));
+  const press = (sel, b) => document.querySelectorAll(sel).forEach(x => x.setAttribute("aria-pressed", x === b));
+  document.querySelectorAll("[data-mode]").forEach(b => b.addEventListener("click", () => { P.mode = b.dataset.mode; press("[data-mode]", b); rebuild(); draw(); }));
+  document.querySelectorAll("[data-view]").forEach(b => b.addEventListener("click", () => { view = b.dataset.view; press("[data-view]", b); draw(); }));
+  document.querySelectorAll("[data-speed]").forEach(b => b.addEventListener("click", () => { speed = +b.dataset.speed; press("[data-speed]", b); }));
+  $("dq").addEventListener("change", () => { showDq = $("dq").checked; draw(); });
+  const setPlay = on => { playing = on; $("play").textContent = playing ? "Pysäytä" : "Jatka"; last = performance.now(); };
+  $("play").addEventListener("click", () => setPlay(!playing));
+  $("step").addEventListener("click", () => { setPlay(false); wt = (Math.round(wt / (Math.PI / 6)) + 1) * Math.PI / 6; draw(); });
+
+  // Alkutila osoitteesta, esim. avaruusvektori.html#mode=neg&phi=90&t=30&dq=1 (t asteina pysäyttää animaation)
+  new URLSearchParams(location.hash.slice(1)).forEach((val, key) => {
+    if (key === "t") { wt = +val * Math.PI / 180; playing = false; }
+    else if (key === "mode" || key === "view") { const b = document.querySelector(`[data-${key}="${val}"]`); if (b) { if (key === "mode") P.mode = val; else view = val; press(`[data-${key}]`, b); } }
+    else if (key === "dq") { $("dq").checked = showDq = val === "1"; }
+    else if (key in outFmt) $(key).value = val;
+  });
+
+  let last = performance.now();
+  function frame(now) {
+    const dt = Math.min((now - last) / 1000, 0.05); last = now;
+    if (playing && P.mode !== "free") { wt += speed * TAU * dt; draw(); }
+    requestAnimationFrame(frame);
+  }
+  readCtl(); rebuild(); draw();
+  $("play").textContent = playing ? "Pysäytä" : "Jatka";
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

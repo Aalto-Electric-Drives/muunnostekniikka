@@ -1,0 +1,431 @@
+<!doctype html>
+<html lang="fi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Käämityksen yliaallot</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=STIX+Two+Text:ital,wght@0,400;0,600;1,400;1,700&display=swap">
+<style>
+/* Asettelu: kone ja käyrät rinnakkain (kapealla allekkain), säätimet ja tehtävät alla. Värit kirjan kuvista. */
+:root {
+  --paper: #fbfbf8;
+  --panel: #f2f3ef;
+  --ink: #1d2128;
+  --muted: #5d6470;
+  --rule: #d9dbd4;
+  --iron: #e6e6e3;      /* kirjan harmaa rautaosille */
+  --magnet: #bfbfbf;
+  --pa: #d0242b;        /* a-vaihe, kirjan punainen */
+  --pb: #17803a;        /* b-vaihe, kirjan vihreä */
+  --pc: #1f3fc4;        /* c-vaihe, kirjan sininen */
+  --wave: #1f3fc4;
+  --accent: #1f3fc4;
+  --font-body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --font-math: "STIX Two Text", "Times New Roman", Times, serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #15181d; --panel: #1d2128; --ink: #e8eaee; --muted: #9aa2ad; --rule: #333944;
+    --iron: #2b3038; --magnet: #59606c; --pa: #ff6b6b; --pb: #5fce80; --pc: #7f9bff; --wave: #7f9bff; --accent: #7f9bff;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #15181d; --panel: #1d2128; --ink: #e8eaee; --muted: #9aa2ad; --rule: #333944;
+  --iron: #2b3038; --magnet: #59606c; --pa: #ff6b6b; --pb: #5fce80; --pc: #7f9bff; --wave: #7f9bff; --accent: #7f9bff;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { margin: 0; }
+body {
+  background: var(--paper); color: var(--ink);
+  font: 15px/1.5 var(--font-body);
+  padding-inline: 16px; padding-block: 20px 40px;
+}
+.wrap { max-width: 1240px; margin: 0 auto; display: grid; gap: 20px; }
+header h1 { font: 600 1.7rem/1.2 var(--font-math); margin: 0 0 4px; text-wrap: balance; }
+header p { margin: 0; color: var(--muted); max-width: 78ch; }
+.m { font-family: var(--font-math); font-style: italic; }
+.m sub, .m sup { font-style: normal; font-size: .72em; }
+.m b { font-weight: 700; }
+.m .up { font-style: normal; }
+.ss { display: inline-flex; flex-direction: column; vertical-align: middle; line-height: .95; font-size: .72em; font-style: normal; margin-left: .05em; }
+.main { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; align-items: start; }
+@media (max-width: 1040px) { .main { grid-template-columns: repeat(2, minmax(0, 1fr)); } .main .plots { grid-column: 1 / -1; } }
+@media (max-width: 640px) { .main { grid-template-columns: minmax(0, 1fr); } }
+.card { background: var(--panel); border: 1px solid var(--rule); border-radius: 6px; padding: 14px; min-width: 0; }
+.card h2 { font: 600 .78rem/1.2 var(--font-body); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 0 0 10px; }
+.card h2 + .seg { margin-bottom: 6px; }
+svg.fig { width: 100%; height: auto; display: block; max-width: 440px; margin-inline: auto; }
+svg.plot { width: 100%; height: auto; display: block; }
+svg text { fill: var(--ink); font-family: var(--font-math); font-size: 14px; }
+svg .it { font-style: italic; }
+svg .b { font-weight: 700; }
+svg .small { font-size: 10px; font-style: normal; font-weight: 400; }
+svg .tick { font-size: 12px; fill: var(--muted); }
+.iron { fill: var(--iron); stroke: var(--ink); stroke-width: 1.2; }
+.gap { fill: var(--paper); stroke: var(--ink); stroke-width: 1.2; }
+.magnet { fill: var(--magnet); stroke: var(--ink); stroke-width: 1; }
+.thin { fill: none; stroke: var(--muted); stroke-width: 1; }
+.axis { fill: none; stroke: var(--ink); stroke-width: 1; }
+.dash { stroke-dasharray: 5 4; }
+.grid { stroke: var(--rule); stroke-width: 1; fill: none; }
+.sa { stroke: var(--pa); } .sb { stroke: var(--pb); } .sc { stroke: var(--pc); } .si { stroke: var(--ink); } .sm { stroke: var(--muted); }
+.fa { fill: var(--pa); } .fb { fill: var(--pb); } .fc { fill: var(--pc); } .fi { fill: var(--ink); } .fm { fill: var(--muted); }
+svg text.fa { fill: var(--pa); } svg text.fb { fill: var(--pb); } svg text.fc { fill: var(--pc); }
+.curve { fill: none; stroke-width: 1.8; stroke-linejoin: round; }
+.sym { fill: var(--paper); stroke: var(--wave); stroke-width: 1.1; }
+.symx { stroke: var(--wave); stroke-width: 1.1; fill: none; }
+.symd { fill: var(--wave); }
+.seg { display: inline-flex; border: 1px solid var(--rule); border-radius: 6px; overflow: hidden; flex-wrap: wrap; }
+.seg button { border: 0; background: var(--paper); color: var(--ink); font: inherit; font-size: .88rem; padding: 5px 10px; cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--wave); color: var(--paper); }
+.seg button + button { border-left: 1px solid var(--rule); }
+button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+table.vals { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; font-size: .92rem; margin-top: 10px; }
+table.vals th, table.vals td { padding: 3px 6px; border-bottom: 1px solid var(--rule); text-align: right; white-space: nowrap; }
+table.vals th { font-weight: 400; text-align: left; white-space: normal; }
+.note { color: var(--muted); font-size: .85rem; margin: 8px 0 0; }
+.legend { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: .85rem; color: var(--muted); margin: 4px 0 0; }
+.legend i { display: inline-block; width: 18px; height: 0; border-top: 2px solid; vertical-align: middle; margin-right: 5px; }
+.controls { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 14px 24px; margin-top: 14px; }
+.ctl label { display: flex; justify-content: space-between; gap: 8px; font-size: .92rem; }
+.ctl output { font-variant-numeric: tabular-nums; font-weight: 600; }
+.ctl input[type=range] { width: 100%; accent-color: var(--wave); }
+.bar { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; }
+.bar + .bar { margin-top: 12px; }
+.btn { border: 1px solid var(--wave); background: var(--wave); color: var(--paper); font: 500 .9rem var(--font-body); padding: 6px 14px; border-radius: 6px; cursor: pointer; }
+.btn.ghost { background: transparent; color: var(--wave); }
+.btn:disabled { opacity: .45; cursor: default; }
+.check { display: inline-flex; gap: 6px; align-items: center; font-size: .9rem; }
+.tasks ol { margin: 0; padding-left: 1.3em; display: grid; gap: 10px; }
+.tasks li { max-width: 80ch; }
+.tasks details { margin-top: 3px; }
+.tasks summary { cursor: pointer; color: var(--wave); font-size: .88rem; }
+.tasks details p { margin: 4px 0 0; color: var(--muted); }
+footer { color: var(--muted); font-size: .82rem; }
+
+.main2 { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 20px; align-items: start; }
+@media (max-width: 860px) { .main2 { grid-template-columns: minmax(0, 1fr); } }
+.slot { fill: var(--paper); stroke: var(--ink); stroke-width: 1; }
+.ref { stroke: var(--pa); stroke-dasharray: 6 4; }
+.bar1 { fill: var(--wave); } .bar2 { fill: var(--muted); }
+.ctlrow { display: flex; flex-wrap: wrap; gap: 10px 22px; align-items: center; }
+.ctlrow > span.lab { font-size: .9rem; }
+.legend i.dashed { border-top-style: dashed; }
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>Urakäämityksen yliaallot</h1>
+  <p>Kirjan kohta 11.1.3 ja luento 11. Avaruusvektorimalli olettaa, että käämit ovat jakautuneet sinimuotoisesti. Todellisessa koneessa johtimet ovat urissa, joten virtojen tuottama magnetomotorinen voima on porrasmainen. Samasta syystä magneettien indusoima jännite ei ole täysin sinimuotoinen. Muuta urien määrää ja vyyhden leveyttä ja katso, miten yliaallot muuttuvat.</p>
+  <p><strong>Vapaaehtoinen syventävä materiaali. Ei kuulu koealueeseen.</strong></p>
+</header>
+
+<div class="main2">
+  <section class="card" aria-labelledby="h-cs">
+    <h2 id="h-cs">Kone ja hetkelliset virrat</h2>
+    <svg id="cs" class="fig" viewBox="-185 -185 370 370" role="img" aria-label="Koneen poikkileikkaus: urien hetkelliset virrat, roottorin magneetit ja virran avaruusvektori"></svg>
+    <p class="note">Merkin koko kuvaa virran hetkellisarvoa (piste = katsojaan päin, risti = poispäin). Virtavektori on q-akselilla eli 90° roottorin d-akselin edellä, jolloin vaihevirta on samassa vaiheessa indusoituvan jännitteen kanssa.</p>
+    <div class="legend"><span><i style="border-color:var(--pa)"></i>a</span><span><i style="border-color:var(--pb)"></i>b</span><span><i style="border-color:var(--pc)"></i>c</span></div>
+    <table class="vals" aria-label="Käämityksen tunnusluvut">
+      <tbody>
+        <tr><th>Urien määrä</th><td id="tQ"></td></tr>
+        <tr><th>Vyyhden leveys</th><td id="tY"></td></tr>
+        <tr><th>Perusaallon käämityskerroin</th><td id="tK"></td></tr>
+      </tbody>
+    </table>
+    <p class="note">Käämityskerroin on perusaallon amplitudi verrattuna käämitykseen, jossa vaiheen kaikki kierrokset ovat yhdessä halkaisijavyyhdessä.</p>
+  </section>
+
+  <section class="card" aria-labelledby="h-f">
+    <h2 id="h-f">Virtojen tuottama magnetomotorinen voima ilmavälissä</h2>
+    <svg id="fplot" class="plot" viewBox="0 0 560 170" role="img" aria-label="Magnetomotorinen voima kehän kulman funktiona"></svg>
+    <h2 id="h-e" style="margin-top:14px">Magneettien indusoima jännite vaiheessa a</h2>
+    <svg id="eplot" class="plot" viewBox="0 0 560 170" role="img" aria-label="Indusoituva jännite roottorin kulman funktiona"></svg>
+    <div class="legend"><span><i style="border-color:var(--wave)"></i>urakäämitys</span><span><i class="dashed" style="border-color:var(--pa)"></i>perusaalto</span></div>
+    <h2 id="h-s" style="margin-top:14px">Yliaaltojen amplitudit, % perusaallosta</h2>
+    <svg id="spec" class="plot" viewBox="0 0 560 150" role="img" aria-label="Yliaaltojen amplitudit suhteessa perusaaltoon"></svg>
+    <div class="legend"><span><i style="border-color:var(--wave);border-top-width:6px"></i>magnetomotorinen voima (paikan suhteen)</span><span><i style="border-color:var(--muted);border-top-width:6px"></i>vaiheen indusoituva jännite (ajan suhteen)</span></div>
+  </section>
+</div>
+
+<section class="card" aria-labelledby="h-ctl">
+  <h2 id="h-ctl">Säätimet</h2>
+  <div class="ctlrow">
+    <span class="lab">Uria napaa ja vaihetta kohti</span>
+    <span class="seg" role="group" aria-label="Uria napaa ja vaihetta kohti">
+      <button type="button" data-q="1">1</button><button type="button" data-q="2">2</button><button type="button" data-q="3">3</button><button type="button" data-q="4">4</button>
+    </span>
+    <span class="lab">Vyyhden leveys</span>
+    <span class="seg" role="group" aria-label="Vyyhden leveys">
+      <button type="button" data-sh="0">Napajako</button><button type="button" data-sh="1">1 ura lyhyempi</button><button type="button" data-sh="2">2 uraa lyhyempi</button>
+    </span>
+  </div>
+  <div class="bar" style="margin-top:14px">
+    <button type="button" class="btn" id="play">Pysäytä</button>
+    <button type="button" class="btn ghost" id="step" title="Etene 15 astetta">Askel 15°</button>
+    <span class="seg" role="group" aria-label="Animaation nopeus">
+      <button type="button" data-speed="0.03" aria-pressed="false">Hidas</button>
+      <button type="button" data-speed="0.1" aria-pressed="true">Normaali</button>
+      <button type="button" data-speed="0.3" aria-pressed="false">Nopea</button>
+    </span>
+  </div>
+  <p class="note">Kone on kaksinapainen ja käämitys kaksikerroksinen. Vaihevirrat ovat sinimuotoiset ja symmetriset. Magneettien vuontiheys ilmavälissä on suorakaiteen muotoinen, kuten kuvassa 11.1(b). Asteikot: 1 vastaa magnetomotorisen voiman perusaallon huippuarvoa ja indusoituvan jännitteen huippuarvoa, jos vaiheen kaikki kierrokset olisivat yhdessä halkaisijavyyhdessä.</p>
+</section>
+
+<section class="card tasks" aria-labelledby="h-tasks">
+  <h2 id="h-tasks">Kokeile itse</h2>
+  <ol>
+    <li>Aloita kirjan käämityksestä (kaksi uraa napaa ja vaihetta kohti, vyyhti yhden uran napajakoa lyhyempi). Vertaa indusoituvaa jännitettä kuvaan 11.3(b).
+      <details><summary>Vastaus</summary><p>Käyrä on sama porrasaalto. Jännite on puolet huippuarvosta 30°:n ajan nollakohdan molemmin puolin, koska roottorin napojen raja ohittaa silloin a-vaiheen reunimmaiset urat. Perusaalto on lähes yhtä suuri kuin porrasaalto, ja viides ja seitsemäs yliaalto ovat hyvin pienet.</p></details></li>
+    <li>Pysäytä animaatio ja etene 15°:n askelin. Säilyykö magnetomotorisen voiman muoto, kun aalto etenee?
+      <details><summary>Vastaus</summary><p>Ei säily. Portaiden paikat on sidottu uriin, joten aallon muoto vaihtelee edetessään, vaikka perusaalto etenee tasaisesti ja sen amplitudi pysyy vakiona. Ero porrasaallon ja perusaallon välillä koostuu yliaalloista, jotka pyörivät eri nopeuksilla kuin perusaalto.</p></details></li>
+    <li>Valitse yksi ura napaa ja vaihetta kohti ja vyyhden leveydeksi napajako. Kuinka suuria viides ja seitsemäs yliaalto ovat?
+      <details><summary>Vastaus</summary><p>Yliaallon <span class="m">ν</span> amplitudi on 1/<span class="m">ν</span> perusaallosta eli 20 % ja 14 %. Indusoituva jännite on kanttiaalto kuten kuvan 11.1(c) alkeellisessa koneessa.</p></details></li>
+    <li>Lisää uria ja kokeile eri vyyhden leveyksiä. Mitkä yliaallot pienenevät? Mitkä eivät pienene lainkaan?
+      <details><summary>Vastaus</summary><p>Käämin jakaminen useaan uraan ja jänteistys pienentävät matalia yliaaltoja, erityisesti viidettä ja seitsemättä. Yliaallot, joiden järjestysluku on urien määrä ± 1, pysyvät kuitenkin suhteessa yhtä suurina (1/<span class="m">ν</span>). Ne johtuvat siitä, että johtimet ovat keskittyneet uriin, ja niillä on sama käämityskerroin kuin perusaallolla. Kun uria on enemmän, ne siirtyvät suuremmille järjestysluvuille ja pienenevät.</p></details></li>
+    <li>Miksi kolmas yliaalto näkyy vaiheen indusoituvassa jännitteessä mutta ei magnetomotorisessa voimassa?
+      <details><summary>Vastaus</summary><p>Kolmella jaolliset yliaallot ovat kaikissa kolmessa vaiheessa samanvaiheisia eli ne muodostavat nollakomponentin. Kolmen vaiheen magnetomotorisissa voimissa ne kumoavat toisensa. Indusoituvassa jännitteessä ne näkyvät vaihejännitteessä mutta eivät pääjännitteessä, eivätkä ne tuota virtaa tähtikytkennässä ilman nollajohdinta.</p></details></li>
+  </ol>
+</section>
+
+<footer>ELEC-C8003 Sähköenergian muunnostekniikka. Magnetomotorinen voima lasketaan Ampèren laista urien hetkellisistä virroista olettaen vakioilmaväli, ideaalinen rauta ja kapeat uran suut. Yliaaltojen amplitudit lasketaan käyristä Fourier-sarjalla. Kuvanumerot viittaavat kurssikirjan versioon 11/2026.</footer>
+</div>
+
+<script>
+(() => {
+  "use strict";
+  const $ = id => document.getElementById(id);
+  const NS = "http://www.w3.org/2000/svg";
+  const TAU = 2 * Math.PI, DEG = Math.PI / 180, A120 = TAU / 3;
+  const fmt = (x, n = 0) => x.toFixed(n).replace(".", ",").replace("-", "−");
+  const mod = (a, n) => ((a % n) + n) % n;
+  const PH = "abc";
+  const reduce = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  // ---- käämitys (kaksinapainen, kaksikerroksinen) ----
+  // Urat k = 0...Q-1 positiiviseen kiertosuuntaan. Ilmavälin puoleisen kerroksen vyöhykkeet ovat järjestyksessä
+  // a+, c-, b+, a-, c+, b- (+ = virran positiivinen suunta katsojaan päin). Vyyhden toinen sivu on uran k - y pohjalla.
+  // Urien paikat on valittu niin, että a-vaiheen magneettiakseli on kulmassa 0, kuten kirjan kuvassa 11.4.
+  const BELT = [[0, 1], [2, -1], [1, 1], [0, -1], [2, 1], [1, -1]];
+  function winding(q, y) {
+    const Q = 6 * q, tau = 3 * q, g = Math.PI / tau;
+    const th0 = Math.PI / 2 - (tau - y) * g / 2 - (q - 1) * g / 2;
+    const sides = [];                                   // {k, layer, ph, s}
+    for (let k = 0; k < Q; k++) {
+      const [ph, s] = BELT[Math.floor(k / q) % 6];
+      sides.push({ k, layer: 0, ph, s }, { k: mod(k - y, Q), layer: 1, ph, s: -s });
+    }
+    return { q, y, Q, tau, g, angle: k => th0 + k * g, sides };
+  }
+
+  const S = { q: 2, sh: 1 };
+  let Wd, wt = 0, speed = 0.1, playing = !reduce;
+  // Roottorin kulma on ϑ_M = ω_m t ja virtavektori on q-akselilla: i_a = -sin(ω_m t)
+  const currents = x => [0, 1, 2].map(k => -Math.sin(x - k * A120));
+
+  // Magnetomotorinen voima näytepisteissä: jokaisen uran kohdalla porras, jonka korkeus on uran kokonaisvirta
+  const NF = 1440;
+  function mmf(x) {
+    const i = currents(x), slotI = new Float64Array(Wd.Q);
+    for (const sd of Wd.sides) slotI[sd.k] += sd.s * i[sd.ph];
+    const F = new Float64Array(NF), jump = new Float64Array(NF);
+    for (let k = 0; k < Wd.Q; k++) jump[mod(Math.round(mod(Wd.angle(k), TAU) / TAU * NF), NF)] -= slotI[k];
+    let acc = 0, mean = 0;
+    for (let n = 0; n < NF; n++) { acc += jump[n]; F[n] = acc; mean += acc; }
+    mean /= NF; const ref = 6 / Math.PI * Wd.q;
+    for (let n = 0; n < NF; n++) F[n] = (F[n] - mean) / ref;
+    return F;                                           // F[n] on arvo välillä [n, n+1) * 2π/NF
+  }
+  // Vaiheen a indusoituva jännite roottorin kulman funktiona, kun magneettien vuontiheys on suorakaide
+  function emf() {
+    const E = new Float64Array(NF), a = Wd.sides.filter(sd => sd.ph === 0);
+    for (let n = 0; n < NF; n++) {
+      const thM = (n + 0.5) / NF * TAU; let e = 0;
+      for (const sd of a) e -= sd.s * (Math.cos(Wd.angle(sd.k) - thM) > 0 ? 1 : -1);
+      E[n] = e / a.length;
+    }
+    return E;
+  }
+  function harmonic(f, nu) {                            // Fourier-sarjan kerroin: [amplitudi, vaihe]
+    let re = 0, im = 0;
+    for (let n = 0; n < NF; n++) { const x = (n + 0.5) / NF * TAU; re += f[n] * Math.cos(nu * x); im += f[n] * Math.sin(nu * x); }
+    return [2 / NF * Math.hypot(re, im), Math.atan2(im, re)];
+  }
+
+  // ---- SVG-apufunktiot ----
+  function el(parent, tag, attrs = {}, text) {
+    const e = document.createElementNS(NS, tag);
+    for (const k in attrs) e.setAttribute(k, attrs[k]);
+    if (text !== undefined) e.textContent = text;
+    parent.appendChild(e); return e;
+  }
+  const pol = (r, a) => [r * Math.cos(a), -r * Math.sin(a)];
+  function arrowHead(parent, x, y, ang, cls, size = 1) {
+    const L = 10 * size, W = 4.2 * size, c = Math.cos(ang), s = -Math.sin(ang);
+    const P = (u, v) => `${(x + u * c - v * s).toFixed(1)} ${(y + u * s + v * c).toFixed(1)}`;
+    return el(parent, "path", { class: cls, d: `M${P(0, 0)} L${P(-L, W)} L${P(-L * 0.75, 0)} L${P(-L, -W)} Z` });
+  }
+  function mtext(parent, x, y, base, sub) {
+    const t = el(parent, "text", { x, y });
+    el(t, "tspan", { class: "it" }, base);
+    if (sub) el(t, "tspan", { class: "small", dy: 3.5 }, sub);
+    return t;
+  }
+
+  // ---- poikkileikkaus ----
+  const RS = 150, RB = 92, RR = 85;
+  let condEls = [], rotorG, vecG;
+  function buildSection() {
+    const svg = $("cs"); svg.textContent = ""; condEls = [];
+    el(svg, "circle", { r: RS, class: "iron" });
+    el(svg, "circle", { r: RB, class: "gap" });
+    el(svg, "circle", { r: RR, class: "iron" });
+    rotorG = el(svg, "g");
+    const r1 = RR - 13, half = 80 * DEG;
+    for (const base of [0, Math.PI]) {
+      const a = pol(RR, base - half), b = pol(RR, base + half), c = pol(r1, base + half), d = pol(r1, base - half);
+      el(rotorG, "path", { class: "magnet", d: `M${a[0]} ${a[1]} A${RR} ${RR} 0 0 0 ${b[0]} ${b[1]} L${c[0]} ${c[1]} A${r1} ${r1} 0 0 1 ${d[0]} ${d[1]} Z` });
+      for (const off of [-50, 0, 50]) {
+        const ang = base + off * DEG, out = base === 0, p = pol(r1 + 2, ang), q = pol(RR - 2, ang);
+        el(rotorG, "line", { class: "axis", x1: p[0], y1: p[1], x2: q[0], y2: q[1] });
+        arrowHead(rotorG, ...(out ? q : p), out ? ang : ang + Math.PI, "fi", 0.5);
+      }
+    }
+    el(rotorG, "line", { class: "axis dash", x1: 0, y1: 0, x2: RS + 12, y2: 0 });
+    arrowHead(rotorG, RS + 22, 0, 0, "fi", 0.8);
+    for (let ph = 0; ph < 3; ph++) {
+      const a = ph * A120, p0 = pol(RS, a), p1 = pol(RS + 16, a), pl = pol(RS + 26, a);
+      el(svg, "line", { class: "s" + PH[ph], "stroke-width": 1.2, x1: p0[0], y1: p0[1], x2: p1[0], y2: p1[1] });
+      arrowHead(svg, ...pol(RS + 22, a), a, "f" + PH[ph], 0.85);
+      el(svg, "text", { x: pl[0] + 7 * Math.sin(a), y: pl[1] + 5 + 7 * Math.cos(a), class: "f" + PH[ph], "text-anchor": "middle" }, PH[ph]);
+    }
+    const w = Math.min(15, TAU * (RB + 12) / Wd.Q * 0.62), rin = RB + 2 + w / 2, rout = rin + w - 0.6;
+    for (let k = 0; k < Wd.Q; k++) el(el(svg, "g", { transform: `rotate(${-Wd.angle(k) / DEG})` }), "rect", { class: "slot", x: RB + 1, y: -w / 2, width: 2 * w + 2, height: w });
+    for (const sd of Wd.sides) {
+      const [x, y] = pol(sd.layer ? rout : rin, Wd.angle(sd.k)), g = el(svg, "g", { transform: `translate(${x.toFixed(1)} ${y.toFixed(1)})` });
+      condEls.push({ sd, rmax: w / 2 - 1.2,
+        c: el(g, "circle", { class: "s" + PH[sd.ph], fill: "var(--paper)", "stroke-width": 1.1 }),
+        d: el(g, "circle", { class: "f" + PH[sd.ph] }),
+        x: el(g, "path", { class: "s" + PH[sd.ph], "stroke-width": 1, fill: "none" }) });
+    }
+    vecG = el(svg, "g");
+    el(vecG, "line", { class: "si", "stroke-width": 2.6, x1: 0, y1: 0, x2: 62, y2: 0 });
+    arrowHead(vecG, 72, 0, 0, "fi", 1.25);
+  }
+  const dLab = () => $("cs").querySelector("#dlab") || el($("cs"), "text", { id: "dlab", "text-anchor": "middle" }, "d");
+
+  // ---- käyrät ----
+  const PL = { x0: 38, x1: 520, y0: 12, y1: 140 };
+  const xOf = a => PL.x0 + a / TAU * (PL.x1 - PL.x0);
+  function mkPlot(svg, ymax, yb, ys, xb, xs) {
+    const yOf = v => (PL.y0 + PL.y1) / 2 - v / ymax * (PL.y1 - PL.y0) / 2;
+    ["0", "π/2", "π", "3π/2", "2π"].forEach((lab, k) => {
+      const x = xOf(k * Math.PI / 2);
+      el(svg, "line", { class: "grid", x1: x, x2: x, y1: PL.y0, y2: PL.y1 });
+      el(svg, "text", { class: "tick", x, y: PL.y1 + 15, "text-anchor": "middle" }, lab);
+    });
+    el(svg, "line", { class: "axis", x1: PL.x0, x2: PL.x1 + 8, y1: yOf(0), y2: yOf(0) });
+    el(svg, "line", { class: "axis", x1: PL.x0, x2: PL.x0, y1: PL.y1, y2: PL.y0 - 6 });
+    for (const v of [-1, 1]) { el(svg, "line", { class: "axis", x1: PL.x0 - 3, x2: PL.x0, y1: yOf(v), y2: yOf(v) }); el(svg, "text", { class: "tick", x: PL.x0 - 6, y: yOf(v) + 4, "text-anchor": "end" }, v < 0 ? "−1" : "1"); }
+    mtext(svg, 4, PL.y0 + 8, yb, ys); mtext(svg, PL.x1 + 12, yOf(0) + 5, xb, xs);
+    return { yOf, ref: el(svg, "path", { class: "curve ref", "stroke-width": 1.5 }), wave: el(svg, "path", { class: "curve", stroke: "var(--wave)", "stroke-width": 2 }), cur: el(svg, "line", { class: "axis dash", y1: PL.y0, y2: PL.y1 }) };
+  }
+  const fp = mkPlot($("fplot"), 1.25, "ℱ", "", "ϑ", ""), ep = mkPlot($("eplot"), 1.25, "e", "a", "ϑ", "M");
+  fp.cur.setAttribute("hidden", "");
+  // porraskäyrä: arvo f[n] välillä [n, n+1) * 2π/NF
+  function stairs(plot, f) {
+    let d = `M${xOf(0).toFixed(1)} ${plot.yOf(f[0]).toFixed(1)}`;
+    for (let n = 1; n < NF; n++) if (f[n] !== f[n - 1]) { const x = xOf(n / NF * TAU).toFixed(1); d += `H${x}V${plot.yOf(f[n]).toFixed(1)}`; }
+    return d + `H${xOf(TAU).toFixed(1)}`;
+  }
+  function sine(plot, amp, ph) {                        // amp * cos(x - ph)
+    let d = ""; for (let k = 0; k <= 240; k++) { const a = k / 240 * TAU; d += (k ? "L" : "M") + xOf(a).toFixed(1) + " " + plot.yOf(amp * Math.cos(a - ph)).toFixed(1); } return d;
+  }
+
+  // ---- spektri ----
+  const NU = [1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21, 23, 25];
+  function drawSpectrum(F, E) {
+    const svg = $("spec"); svg.textContent = "";
+    const x0 = 38, x1 = 548, y0 = 14, y1 = 118, pitch = (x1 - x0) / NU.length, yOf = v => y1 - Math.min(v, 36) / 36 * (y1 - y0);
+    for (const v of [0, 10, 20, 30]) { el(svg, "line", { class: v ? "grid" : "axis", x1: x0, x2: x1, y1: yOf(v), y2: yOf(v) }); el(svg, "text", { class: "tick", x: x0 - 6, y: yOf(v) + 4, "text-anchor": "end" }, v); }
+    const f1 = harmonic(F, 1)[0], e1 = harmonic(E, 1)[0];
+    NU.forEach((nu, i) => {
+      const xc = x0 + (i + 0.5) * pitch, bw = Math.min(13, pitch * 0.3);
+      el(svg, "text", { class: "tick", x: xc, y: y1 + 15, "text-anchor": "middle" }, nu);
+      if (nu === 1) { el(svg, "text", { class: "tick", x: xc, y: yOf(30) + 4, "text-anchor": "middle" }, "100"); return; }
+      const vals = [harmonic(F, nu)[0] / f1 * 100, harmonic(E, nu)[0] / e1 * 100];
+      vals.forEach((v, j) => el(svg, "rect", { class: j ? "bar2" : "bar1", x: xc + (j ? 1 : -bw - 1), width: bw, y: yOf(v), height: y1 - yOf(v) }));
+      const top = Math.max(...vals);
+      if (top >= 0.05) el(svg, "text", { class: "tick", x: xc, y: yOf(top) - 4, "text-anchor": "middle", style: "font-size:10.5px" }, fmt(top, top < 9.95 ? 1 : 0));
+    });
+    const t = el(svg, "text", { class: "tick", x: x1, y: y1 + 30, "text-anchor": "end" }); el(t, "tspan", {}, "järjestysluku "); el(t, "tspan", { class: "it" }, "ν");
+  }
+
+  // ---- päivitys ----
+  let E = null;
+  function rebuild() {
+    S.sh = Math.min(S.sh, S.q, 2);
+    Wd = winding(S.q, 3 * S.q - S.sh);
+    buildSection();
+    E = emf();
+    const [e1, ph] = harmonic(E, 1);
+    ep.wave.setAttribute("d", stairs(ep, E)); ep.ref.setAttribute("d", sine(ep, e1, ph));
+    const F = mmf(0.3);
+    drawSpectrum(F, E);
+    $("tQ").textContent = Wd.Q;
+    $("tY").textContent = `${Wd.y} uraa = ${fmt(Wd.y * 180 / Wd.tau)}°`;
+    $("tK").textContent = fmt(harmonic(F, 1)[0], 3);
+    press("[data-q]", document.querySelector(`[data-q="${S.q}"]`));
+    press("[data-sh]", document.querySelector(`[data-sh="${S.sh}"]`));
+    document.querySelectorAll("[data-sh]").forEach(b => { b.disabled = +b.dataset.sh > S.q; b.style.opacity = b.disabled ? 0.4 : 1; });
+    draw();
+  }
+  function draw() {
+    const i = currents(wt), F = mmf(wt), [f1, ph] = harmonic(F, 1);
+    fp.wave.setAttribute("d", stairs(fp, F)); fp.ref.setAttribute("d", sine(fp, f1, ph));
+    const xm = xOf(mod(wt, TAU)); ep.cur.setAttribute("x1", xm); ep.cur.setAttribute("x2", xm);
+    for (const o of condEls) {
+      const v = o.sd.s * i[o.sd.ph], r = o.rmax * Math.sqrt(Math.abs(v)), vis = r > 1;
+      o.c.setAttribute("r", vis ? r : 0); o.d.setAttribute("r", vis && v > 0 ? Math.max(0.9, r * 0.3) : 0);
+      const h = r * 0.707; o.x.setAttribute("d", vis && v < 0 ? `M${-h} ${-h} L${h} ${h} M${-h} ${h} L${h} ${-h}` : "");
+    }
+    rotorG.setAttribute("transform", `rotate(${-wt / DEG})`);
+    vecG.setAttribute("transform", `rotate(${-(wt + Math.PI / 2) / DEG})`);
+    const p = pol(RS + 16, wt + 0.12), t = dLab(); t.setAttribute("x", p[0]); t.setAttribute("y", p[1] + 5);
+  }
+
+  // ---- säätimet ----
+  const press = (sel, b) => document.querySelectorAll(sel).forEach(x => x.setAttribute("aria-pressed", x === b));
+  document.querySelectorAll("[data-q]").forEach(b => b.addEventListener("click", () => { S.q = +b.dataset.q; rebuild(); }));
+  document.querySelectorAll("[data-sh]").forEach(b => b.addEventListener("click", () => { S.sh = +b.dataset.sh; rebuild(); }));
+  document.querySelectorAll("[data-speed]").forEach(b => b.addEventListener("click", () => { speed = +b.dataset.speed; press("[data-speed]", b); }));
+  const setPlay = on => { playing = on; $("play").textContent = playing ? "Pysäytä" : "Jatka"; last = performance.now(); };
+  $("play").addEventListener("click", () => setPlay(!playing));
+  $("step").addEventListener("click", () => { setPlay(false); wt = (Math.round(wt / (Math.PI / 12)) + 1) * Math.PI / 12; draw(); });
+
+  // Alkutila osoitteesta, esim. kaamityksen_yliaallot.html#q=1&sh=0&t=30 (t asteina pysäyttää animaation)
+  const hp = new URLSearchParams(location.hash.slice(1));
+  if (hp.has("q")) S.q = Math.min(4, Math.max(1, +hp.get("q")));
+  if (hp.has("sh")) S.sh = Math.min(2, Math.max(0, +hp.get("sh")));
+  if (hp.has("t")) { wt = +hp.get("t") * DEG; playing = false; }
+
+  let last = performance.now();
+  function frame(now) {
+    const dt = Math.min((now - last) / 1000, 0.05); last = now;
+    if (playing) { wt += speed * TAU * dt; draw(); }
+    requestAnimationFrame(frame);
+  }
+  rebuild();
+  $("play").textContent = playing ? "Pysäytä" : "Jatka";
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

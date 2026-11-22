@@ -1,0 +1,524 @@
+<!doctype html>
+<html lang="fi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Katkojan toiminta</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=STIX+Two+Text:ital,wght@0,400;0,600;1,400&display=swap">
+<style>
+/* Asettelu: piiri ja käyrämuodot rinnakkain (kapealla allekkain), säätimet ja tehtävät alla. Värit kirjan kuvista. */
+:root {
+  --paper: #fbfbf8;
+  --panel: #f2f3ef;
+  --ink: #1d2128;
+  --muted: #5d6470;
+  --rule: #d9dbd4;
+  --passive: #a9aeb5;
+  --wave: #1f3fc4;      /* kirjan sininen */
+  --wave-soft: rgba(31, 63, 196, .12);
+  --avg: #d0242b;       /* kirjan punainen katkoviiva */
+  --accent: #1f3fc4;
+  --font-body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --font-math: "STIX Two Text", "Times New Roman", Times, serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #15181d; --panel: #1d2128; --ink: #e8eaee; --muted: #9aa2ad; --rule: #333944;
+    --passive: #5b626d; --wave: #7f9bff; --wave-soft: rgba(127, 155, 255, .16); --avg: #ff6b6b; --accent: #7f9bff;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #15181d; --panel: #1d2128; --ink: #e8eaee; --muted: #9aa2ad; --rule: #333944;
+  --passive: #5b626d; --wave: #7f9bff; --wave-soft: rgba(127, 155, 255, .16); --avg: #ff6b6b; --accent: #7f9bff;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { margin: 0; }
+body {
+  background: var(--paper); color: var(--ink);
+  font: 15px/1.5 var(--font-body);
+  padding-inline: 16px; padding-block: 20px 40px;
+}
+.wrap { max-width: 1180px; margin: 0 auto; display: grid; gap: 20px; }
+header h1 { font: 600 1.7rem/1.2 var(--font-math); margin: 0 0 4px; text-wrap: balance; }
+header p { margin: 0; color: var(--muted); max-width: 72ch; }
+.m { font-family: var(--font-math); font-style: italic; }
+.m sub { font-style: normal; font-size: .72em; }
+.main { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 20px; align-items: start; }
+@media (max-width: 860px) { .main { grid-template-columns: minmax(0, 1fr); } }
+.card { background: var(--panel); border: 1px solid var(--rule); border-radius: 6px; padding: 14px; min-width: 0; }
+.card h2 { font: 600 .78rem/1 var(--font-body); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 0 0 10px; }
+svg#circuit { width: 100%; height: auto; display: block; }
+svg#circuit .w { fill: none; stroke: var(--passive); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+svg#circuit .w.on { stroke: var(--wave); stroke-width: 2.6; stroke-dasharray: 7 5; }
+svg#circuit .sym { fill: none; stroke: var(--passive); stroke-width: 1.6; }
+svg#circuit .sym.on { stroke: var(--wave); stroke-width: 2.2; }
+svg#circuit .dfill { fill: var(--paper); stroke: var(--passive); stroke-width: 1.6; }
+svg#circuit .dfill.on { fill: var(--wave); stroke: var(--wave); }
+svg#circuit .src { fill: var(--panel); stroke: var(--ink); stroke-width: 1.6; }
+svg#circuit .srcw { fill: none; stroke: var(--ink); stroke-width: 1.6; }
+svg#circuit text.sign { font-style: normal; font-size: 13px; }
+svg#circuit text { fill: var(--ink); font-family: var(--font-math); font-size: 14px; }
+svg#circuit text.it { font-style: italic; }
+svg#circuit .small { font-size: 10px; font-style: normal; }
+svg#circuit .arrow { stroke: var(--ink); stroke-width: 1.2; fill: none; }
+svg#circuit .head { fill: var(--ink); }
+svg#circuit .node { fill: var(--ink); }
+.state { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; align-items: center; }
+.chip { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 999px; border: 1px solid var(--rule); background: var(--paper); font-size: .9rem; }
+.chip b { font-weight: 600; }
+.chip.cond { border-color: var(--wave); color: var(--wave); }
+.seg { display: inline-flex; border: 1px solid var(--rule); border-radius: 6px; overflow: hidden; }
+.seg button { border: 0; background: var(--paper); color: var(--ink); font: inherit; font-size: .88rem; padding: 5px 10px; cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--wave); color: var(--paper); }
+.seg button + button { border-left: 1px solid var(--rule); }
+button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+canvas#scope { width: 100%; height: 470px; display: block; }
+table.vals { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; font-size: .92rem; margin-top: 12px; }
+table.vals th, table.vals td { padding: 4px 6px; border-bottom: 1px solid var(--rule); text-align: right; }
+table.vals th:first-child, table.vals td:first-child { text-align: left; }
+table.vals td:not(:first-child) { white-space: nowrap; }
+.tablewrap { overflow-x: auto; }
+@media (max-width: 480px) { table.vals { font-size: .84rem; } table.vals td, table.vals th { padding: 4px 3px; } }
+table.vals th { font-weight: 500; color: var(--muted); font-size: .8rem; }
+.note { color: var(--muted); font-size: .85rem; margin: 8px 0 0; }
+.controls { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 14px 24px; }
+.ctl label { display: flex; justify-content: space-between; gap: 8px; font-size: .92rem; }
+.ctl output { font-variant-numeric: tabular-nums; font-weight: 600; }
+.ctl input[type=range] { width: 100%; accent-color: var(--wave); }
+.bar { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; margin-top: 14px; }
+.btn { border: 1px solid var(--wave); background: var(--wave); color: var(--paper); font: 500 .9rem var(--font-body); padding: 6px 14px; border-radius: 6px; cursor: pointer; }
+.btn.ghost { background: transparent; color: var(--wave); }
+.check { display: inline-flex; gap: 6px; align-items: center; font-size: .9rem; }
+.tasks ol { margin: 0; padding-left: 1.3em; display: grid; gap: 10px; }
+.tasks li { max-width: 80ch; }
+.tasks details { margin-top: 3px; }
+.tasks summary { cursor: pointer; color: var(--wave); font-size: .88rem; }
+.tasks details p { margin: 4px 0 0; color: var(--muted); }
+footer { color: var(--muted); font-size: .82rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>Tasasähkökatkoja ja pulssinleveysmodulointi</h1>
+  <p>Kirjan luku 6 ja luento 4. Vaihtokytkin syöttää <span class="m">RLE</span>-kuormaa jännitteellä <span class="m">u</span> = 0 tai <span class="m">U<sub>dc</sub></span>. Muuta pulssisuhdetta, kuorman jännitettä, kytkentätaajuutta ja induktanssia, ja seuraa käyrämuotoja sekä virran kulkutietä.</p>
+  <p>Kurssilla painopiste on jännitettä laskevassa toiminnassa, jossa teho siirtyy lähteestä kuormaan. Kaksisuuntainen katkoja voi toimia myös jännitettä nostavana: kun säädät <span class="m">e</span> suuremmaksi kuin <span class="m">dU<sub>dc</sub></span>, virta kääntyy negatiiviseksi ja teho siirtyy kuormalta lähteeseen.</p>
+</header>
+
+<div class="main">
+  <section class="card" aria-labelledby="h-circ">
+    <h2 id="h-circ">Pääpiiri</h2>
+    <div class="seg" role="group" aria-label="Piirin esitystapa">
+      <button type="button" id="viewSw" aria-pressed="false">Vaihtokytkinmalli</button>
+      <button type="button" id="viewDev" aria-pressed="true">Puolijohdetoteutus</button>
+    </div>
+    <svg id="circuit" viewBox="0 0 400 230" role="img" aria-label="Katkojan pääpiiri, jossa virran kulkutie on korostettu">
+      <!-- johtimet: kaikki piirretty virran positiivisen suunnan mukaan -->
+      <path class="w" data-seg="src" d="M60 190 V40"/>
+      <path class="w" data-seg="tR1" d="M60 40 H170"/>
+      <path class="w" data-seg="bR1" d="M370 190 H200"/>
+      <path class="w" data-seg="bR2" d="M200 190 H170"/>
+      <path class="w" data-seg="bR3" d="M170 190 H60"/>
+      <path class="w" data-seg="load" d="M200 115 H240"/>
+      <path class="sym" data-seg="load" id="coil" d="M240 115 a6.25 6.25 0 0 1 12.5 0 a6.25 6.25 0 0 1 12.5 0 a6.25 6.25 0 0 1 12.5 0 a6.25 6.25 0 0 1 12.5 0"/>
+      <path class="w" data-seg="load" d="M290 115 H300"/>
+      <path class="sym" data-seg="load" d="M300 115 l3.33 -7 l6.67 14 l6.67 -14 l6.67 14 l6.67 -14 l6.67 14 l3.33 -7"/>
+      <path class="w" data-seg="load" d="M340 115 H370 V138"/>
+      <path class="w" data-seg="load" d="M370 166 V190"/>
+      <!-- puolijohdetoteutus -->
+      <g id="devView">
+        <path class="w" data-seg="tR2" d="M170 40 H200"/>
+        <path class="w" data-seg="T1" d="M170 40 V60 M170 95 V115"/>
+        <path class="sym" data-seg="T1" id="blade1" d="M170 95 L170 60"/>
+        <path class="w" data-seg="D1" d="M200 40 V68 M200 86 V115"/>
+        <path class="dfill" data-seg="D1" d="M191 86 H209 L200 70 Z"/>
+        <path class="sym" data-seg="D1" d="M191 70 H209"/>
+        <path class="w" data-seg="mid" d="M170 115 H200"/>
+        <path class="w" data-seg="T2" d="M170 190 V170 M170 135 V115"/>
+        <path class="sym" data-seg="T2" id="blade2" d="M170 170 L170 135"/>
+        <path class="w" data-seg="D2" d="M200 190 V161 M200 143 V115"/>
+        <path class="dfill" data-seg="D2" d="M191 161 H209 L200 145 Z"/>
+        <path class="sym" data-seg="D2" d="M191 145 H209"/>
+        <text x="148" y="82" class="it">q</text>
+        <text x="138" y="157" class="it">¬q</text>
+        <circle class="node" cx="200" cy="115" r="2.4"/>
+      </g>
+      <!-- vaihtokytkinmalli -->
+      <g id="swView" hidden>
+        <path class="w" data-seg="swT" d="M170 40 V62"/>
+        <path class="w" data-seg="swB" d="M170 190 V168"/>
+        <path class="sym" id="arm" d="M200 115 L172 64"/>
+        <circle class="node" cx="170" cy="62" r="2.4"/>
+        <circle class="node" cx="170" cy="168" r="2.4"/>
+        <circle class="node" cx="200" cy="115" r="2.4"/>
+        <text x="138" y="120" class="it">q</text>
+      </g>
+      <!-- lähteet -->
+      <circle class="src" cx="60" cy="115" r="16"/>
+      <path class="srcw" d="M60 99 V131"/>
+      <text x="47" y="94" class="sign">+</text>
+      <text x="48" y="146" class="sign">−</text>
+      <text x="16" y="120" class="it">U<tspan class="small" dy="3">dc</tspan></text>
+      <circle class="src" cx="370" cy="152" r="14"/>
+      <path class="srcw" d="M370 138 V166"/>
+      <text x="375" y="135" class="sign">+</text>
+      <text x="375" y="180" class="sign">−</text>
+      <text x="388" y="157" class="it">e</text>
+      <!-- merkinnät -->
+      <text x="258" y="99" class="it">L</text>
+      <text x="314" y="99" class="it">R</text>
+      <path class="head" d="M226 115 l-10 -5 l2.5 5 l-2.5 5 z"/>
+      <text x="216" y="105" class="it">i</text>
+      <path class="head" d="M120 40 l-10 -5 l2.5 5 l-2.5 5 z"/>
+      <text x="108" y="30" class="it">i<tspan class="small" dy="3">d</tspan></text>
+      <path class="arrow" d="M222 125 V176"/><path class="head" d="M222 184 l-4.5 -9 l4.5 2.2 l4.5 -2.2 z"/>
+      <text x="228" y="158" class="it">u</text>
+    </svg>
+    <div class="state" aria-live="off">
+      <span class="chip"><span class="m">q</span>&nbsp;=&nbsp;<b id="qv">1</b></span>
+      <span class="chip cond" id="condChip">Johtaa: ylähaaran transistori</span>
+    </div>
+    <div class="tablewrap"><table class="vals" aria-label="Keskiarvot ja sykkeisyys">
+      <thead><tr><th>Suure</th><th>Kaava</th><th>Teoria</th><th>Simuloitu</th></tr></thead>
+      <tbody>
+        <tr><td><span class="m">u</span> keskiarvo</td><td><span class="m">dU<sub>dc</sub></span></td><td id="uT"></td><td id="uS"></td></tr>
+        <tr><td><span class="m">i</span> keskiarvo</td><td>(<span class="m">ū − e</span>)/<span class="m">R</span></td><td id="iT"></td><td id="iS"></td></tr>
+        <tr><td><span class="m">i<sub>d</sub></span> keskiarvo</td><td><span class="m">d ī</span></td><td id="idT"></td><td id="idS"></td></tr>
+        <tr><td>Sykkeisyys <span class="m">Δi</span></td><td><span class="m">d</span>(1−<span class="m">d</span>)<span class="m">U<sub>dc</sub></span>/(<span class="m">f<sub>sw</sub></span><span class="m">L</span>)</td><td id="riT"></td><td id="riS"></td></tr>
+      </tbody>
+    </table></div>
+    <p class="note">Teoriasarakkeen <span class="m">Δi</span> olettaa <span class="m">R</span> ≈ 0, ja <span class="m">ī<sub>d</sub></span> = <span class="m">d ī</span> olettaa pienen sykkeisyyden (kirjan kohdat 6.1.2 ja 6.1.3). Suurella sykkeisyydellä simuloitu arvo poikkeaa siksi hieman.</p>
+    <p class="note" id="powerNote"></p>
+  </section>
+
+  <section class="card" aria-labelledby="h-wave">
+    <h2 id="h-wave">Käyrämuodot, kolme viimeisintä kytkentäjaksoa</h2>
+    <canvas id="scope" aria-label="Kantoaalto ja pulssisuhde, jännite u, virta i ja tulovirta i_d ajan funktiona"></canvas>
+    <p class="note">Sininen: hetkellisarvo. Punainen katkoviiva: keskiarvo edellisen kytkentäjakson yli. Sininen tausta: <span class="m">q</span> = 1.</p>
+  </section>
+</div>
+
+<section class="card" aria-labelledby="h-ctl">
+  <h2 id="h-ctl">Säätimet</h2>
+  <div class="controls">
+    <div class="ctl"><label for="d"><span>Pulssisuhde <span class="m">d</span></span><output id="dO"></output></label><input type="range" id="d" min="0" max="1" step="0.01" value="0.6"></div>
+    <div class="ctl"><label for="e"><span>Sisäinen jännite <span class="m">e</span></span><output id="eO"></output></label><input type="range" id="e" min="0" max="100" step="1" value="45"></div>
+    <div class="ctl"><label for="f"><span>Kytkentätaajuus <span class="m">f<sub>sw</sub></span></span><output id="fO"></output></label><input type="range" id="f" min="0.5" max="5" step="0.1" value="1"></div>
+    <div class="ctl"><label for="L"><span>Induktanssi <span class="m">L</span></span><output id="LO"></output></label><input type="range" id="L" min="1" max="20" step="0.5" value="5"></div>
+  </div>
+  <div class="bar">
+    <button type="button" class="btn" id="play">Pysäytä</button>
+    <button type="button" class="btn ghost" id="step" title="Etene kymmenesosa kytkentäjaksoa">Askel</button>
+    <span class="seg" role="group" aria-label="Animaation nopeus">
+      <button type="button" data-speed="0.25" aria-pressed="false">Hidas</button>
+      <button type="button" data-speed="1" aria-pressed="true">Normaali</button>
+      <button type="button" data-speed="6" aria-pressed="false">Nopea</button>
+    </span>
+    <label class="check"><input type="checkbox" id="ss" checked> Siirry suoraan pysyvään tilaan</label>
+  </div>
+  <p class="note"><span class="m">U<sub>dc</sub></span> = 100 V ja <span class="m">R</span> = 1 Ω ovat vakioita. Nopeus kertoo, kuinka monta kytkentäjaksoa kuluu sekunnissa. Kun valinta "Siirry suoraan pysyvään tilaan" on pois päältä, näet muutosilmiön aikavakiolla <span class="m">L</span>/<span class="m">R</span>.</p>
+</section>
+
+<section class="card tasks" aria-labelledby="h-tasks">
+  <h2 id="h-tasks">Kokeile itse</h2>
+  <ol>
+    <li>Muuta pulssisuhdetta välillä 0,1–0,9 ja säädä <span class="m">e</span> niin, että <span class="m">ī</span> pysyy positiivisena. Millä pulssisuhteella sykkeisyys <span class="m">Δi</span> on suurin?
+      <details><summary>Vastaus</summary><p>Arvolla <span class="m">d</span> = 0,5. Yhtälön (6.8) tekijä <span class="m">d</span>(1−<span class="m">d</span>) on silloin suurimmillaan. Kun <span class="m">d</span> kasvaa, kelan jännite <span class="m">U<sub>dc</sub></span> − <span class="m">ū</span> päälläoloaikana pienenee, vaikka päälläoloaika pitenee.</p></details></li>
+    <li>Kaksinkertaista kytkentätaajuus. Miten <span class="m">Δi</span> muuttuu? Entä mitä tapahtuu kytkentähäviöille yhtälön (6.11) mukaan?
+      <details><summary>Vastaus</summary><p>Sykkeisyys puolittuu, mutta kytkentähäviöt <span class="m">P<sub>sw</sub></span> kaksinkertaistuvat. Kytkentätaajuuden valinta on siis kompromissi.</p></details></li>
+    <li>Säädä <span class="m">e</span> suuremmaksi kuin <span class="m">dU<sub>dc</sub></span>. Mihin suuntaan teho siirtyy? Mitkä komponentit johtavat tiloissa <span class="m">q</span> = 1 ja <span class="m">q</span> = 0?
+      <details><summary>Vastaus</summary><p>Virta on negatiivinen, joten teho siirtyy kuormalta lähteeseen eli katkoja toimii jännitettä nostavana. Tilassa <span class="m">q</span> = 1 johtaa ylähaaran diodi ja tilassa <span class="m">q</span> = 0 alahaaran transistori (vrt. kirjan kuva 6.4).</p></details></li>
+    <li>Etsi toimintapiste, jossa virta vaihtaa suuntaa kytkentäjakson aikana (vinkki: <span class="m">e</span> ≈ <span class="m">dU<sub>dc</sub></span> ja pieni <span class="m">L</span>). Mitkä komponentit johtavat jakson aikana?
+      <details><summary>Vastaus</summary><p>Kaikki neljä vuorollaan. Johtava komponentti riippuu sekä kytkimen tilasta <span class="m">q</span> että virran suunnasta. Vaihtokytkinmalli pätee silti koko ajan, koska ylä- ja alahaaraa ohjataan käänteisesti.</p></details></li>
+    <li>Poista valinta "Siirry suoraan pysyvään tilaan" ja muuta <span class="m">e</span>:tä. Kuinka monen kytkentäjakson kuluttua keskiarvo <span class="m">ī</span> on asettunut? Vertaa aikavakioon <span class="m">L</span>/<span class="m">R</span>.
+      <details><summary>Vastaus</summary><p>Keskiarvo noudattaa ensimmäisen kertaluvun dynamiikkaa aikavakiolla <span class="m">T</span> = <span class="m">L</span>/<span class="m">R</span>, eli asettuminen kestää muutaman aikavakion. Arvoilla <span class="m">L</span> = 5 mH ja <span class="m">f<sub>sw</sub></span> = 1 kHz aikavakio on viisi kytkentäjaksoa. Sama admittanssi <span class="m">Y</span>(<span class="m">s</span>) = 1/(<span class="m">sL</span> + <span class="m">R</span>) esiintyy tasasähkökoneen lohkokaaviossa.</p></details></li>
+  </ol>
+</section>
+
+<footer>ELEC-C8003 Sähköenergian muunnostekniikka. Simulointi ratkaisee yhtälön <span class="m">L</span> d<span class="m">i</span>/d<span class="m">t</span> = <span class="m">u − e − Ri</span> tarkasti 400 aika-askeleella kytkentäjaksoa kohden. Kantoaaltona on kolmioaalto (kirjan kuva 6.3). Yhtälö- ja kuvanumerot viittaavat kurssikirjan versioon 11/2026.</footer>
+</div>
+
+<script>
+(() => {
+  "use strict";
+  const Udc = 100, R = 1, N = 400;
+  const P = { d: 0.6, e: 45, fsw: 1000, L: 5e-3 };
+  let speed = 1, playing = true, view = "dev";
+  const reduce = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (reduce) playing = false;
+
+  // ---- rengaspuskuri näytteille ----
+  const CAP = 1 << 13;
+  const B = { t: new Float64Array(CAP), tri: new Float64Array(CAP), q: new Uint8Array(CAP), u: new Float64Array(CAP), i: new Float64Array(CAP), id: new Float64Array(CAP) };
+  let head = 0, count = 0;
+  const S = { t: 0, i: 0, q: 0, tri: 1 };
+  const idx = k => (head - count + k + CAP) % CAP; // k = 0 vanhin
+
+  function carrier(t) { const ph = (t * P.fsw) % 1; return ph < 0.5 ? 1 - 2 * ph : 2 * ph - 1; }
+  function stepSim(h, record) {
+    const tri = carrier(S.t + h / 2);
+    const q = P.d > tri ? 1 : 0;
+    const u = q * Udc, iss = (u - P.e) / R, a = Math.exp(-R * h / P.L);
+    S.i = iss + (S.i - iss) * a; S.t += h; S.q = q; S.tri = tri;
+    if (record) {
+      B.t[head] = S.t; B.tri[head] = tri; B.q[head] = q; B.u[head] = u; B.i[head] = S.i; B.id[head] = q * S.i;
+      head = (head + 1) % CAP; count = Math.min(count + 1, CAP);
+    }
+  }
+  function toSteadyState() {
+    const Tsw = 1 / P.fsw, h = Tsw / N;
+    S.t = Math.ceil(S.t / Tsw) * Tsw;            // jakson alkuun
+    const K = Math.ceil(10 * (P.L / R) / Tsw) + 2;
+    for (let k = 0; k < K * N; k++) stepSim(h, false);
+    count = 0;
+    for (let k = 0; k < 4 * N; k++) stepSim(h, true);
+  }
+
+  // ---- säätimet ----
+  const $ = id => document.getElementById(id);
+  const fmt = (x, n = 1) => x.toFixed(n).replace(".", ",").replace("-", "−");
+  function readCtl() {
+    P.d = +$("d").value; P.e = +$("e").value; P.fsw = +$("f").value * 1000; P.L = +$("L").value * 1e-3;
+    $("dO").textContent = fmt(P.d, 2);
+    $("eO").textContent = fmt(P.e, 0) + " V";
+    $("fO").textContent = fmt(P.fsw / 1000, 1) + " kHz";
+    $("LO").textContent = fmt(P.L * 1000, 1) + " mH";
+  }
+  ["d", "e", "f", "L"].forEach(id => $(id).addEventListener("input", () => {
+    readCtl();
+    if ($("ss").checked) toSteadyState();
+    if (!playing) draw();
+  }));
+  $("ss").addEventListener("change", () => { if ($("ss").checked) { toSteadyState(); if (!playing) draw(); } });
+  $("play").addEventListener("click", () => { playing = !playing; $("play").textContent = playing ? "Pysäytä" : "Jatka"; last = performance.now(); });
+  $("step").addEventListener("click", () => {
+    const h = 1 / P.fsw / N; for (let k = 0; k < N / 10; k++) stepSim(h, true); draw();
+  });
+  document.querySelectorAll("[data-speed]").forEach(b => b.addEventListener("click", () => {
+    speed = +b.dataset.speed;
+    document.querySelectorAll("[data-speed]").forEach(x => x.setAttribute("aria-pressed", x === b));
+  }));
+  function setView(v) {
+    view = v; $("devView").toggleAttribute("hidden", v !== "dev"); $("swView").toggleAttribute("hidden", v !== "sw");
+    $("viewDev").setAttribute("aria-pressed", v === "dev"); $("viewSw").setAttribute("aria-pressed", v === "sw");
+    if (!playing) draw();
+  }
+  $("viewDev").addEventListener("click", () => setView("dev"));
+  $("viewSw").addEventListener("click", () => setView("sw"));
+
+  // ---- piiri ----
+  const segs = [...document.querySelectorAll("#circuit [data-seg]")];
+  const arm = $("arm"), blade1 = $("blade1"), blade2 = $("blade2");
+  let dashOff = 0;
+  function activeSet(q, i) {
+    const pos = i >= 0;
+    if (view === "sw") return q ? ["src", "tR1", "swT", "load", "bR1", "bR2", "bR3"] : ["swB", "load", "bR1", "bR2"];
+    if (q) return pos ? ["src", "tR1", "T1", "mid", "load", "bR1", "bR2", "bR3"] : ["src", "tR1", "tR2", "D1", "load", "bR1", "bR2", "bR3"];
+    return pos ? ["D2", "load", "bR1"] : ["T2", "mid", "load", "bR1", "bR2"];
+  }
+  const condName = { T1: "ylähaaran transistori", D1: "ylähaaran diodi", T2: "alahaaran transistori", D2: "alahaaran diodi" };
+  function updateCircuit(dt, iScale) {
+    const q = S.q, i = S.i, flow = Math.abs(i) > 1e-3;
+    const act = new Set(flow ? activeSet(q, i) : []);
+    dashOff -= Math.sign(i) * Math.min(1, Math.abs(i) / Math.max(iScale, 1e-6)) * 60 * dt * (reduce ? 0 : 1);
+    for (const el of segs) {
+      const on = act.has(el.dataset.seg);
+      el.classList.toggle("on", on);
+      if (el.classList.contains("w")) el.style.strokeDashoffset = on ? dashOff : 0;
+    }
+    arm.setAttribute("d", q ? "M200 115 L172 64" : "M200 115 L172 166");
+    arm.classList.toggle("on", flow);
+    blade1.setAttribute("d", q ? "M170 95 L170 60" : "M170 95 L182 63");
+    blade2.setAttribute("d", q ? "M170 170 L182 138" : "M170 170 L170 135");
+    $("qv").textContent = q;
+    let txt;
+    if (!flow) txt = "Virta on nolla";
+    else if (view === "sw") txt = q ? 'Kytkin yläasennossa: <span class="m">u</span> = <span class="m">U<sub>dc</sub></span>' : 'Kytkin ala-asennossa: <span class="m">u</span> = 0';
+    else { const dev = q ? (i >= 0 ? "T1" : "D1") : (i >= 0 ? "D2" : "T2"); txt = "Johtaa: " + condName[dev]; }
+    $("condChip").innerHTML = txt;
+  }
+
+  // ---- oskilloskooppi ----
+  const cv = $("scope"), ctx = cv.getContext("2d");
+  let W = 0, H = 0, dpr = 1;
+  function resize() {
+    dpr = window.devicePixelRatio || 1;
+    const r = cv.getBoundingClientRect(); W = r.width; H = r.height;
+    cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    draw();
+  }
+  const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  let iRange = null, idRange = null;
+  function niceStep(span) { const p = Math.pow(10, Math.floor(Math.log10(span))); const m = span / p; return (m <= 1 ? 1 : m <= 2 ? 2 : m <= 5 ? 5 : 10) * p; }
+  function smoothRange(prev, lo, hi) {
+    lo = Math.min(lo, 0); hi = Math.max(hi, 0);
+    const pad = Math.max((hi - lo) * 0.12, 0.5); lo -= pad; hi += pad;
+    if (!prev) return [lo, hi];
+    // laajenna heti, kutista hitaasti
+    return [lo < prev[0] ? lo : prev[0] + (lo - prev[0]) * 0.08, hi > prev[1] ? hi : prev[1] + (hi - prev[1]) * 0.08];
+  }
+  let lastStats = null;
+  function draw(dt = 0) {
+    if (!W) return;
+    const col = { ink: css("--ink"), muted: css("--muted"), rule: css("--rule"), wave: css("--wave"), soft: css("--wave-soft"), avg: css("--avg"), panel: css("--panel") };
+    ctx.clearRect(0, 0, W, H);
+    const Tsw = 1 / P.fsw, tEnd = S.t, tStart = tEnd - 3 * Tsw;
+    // kerää näytteet ikkunasta + yksi jakso taaksepäin keskiarvoja varten
+    let k0 = 0; while (k0 < count && B.t[idx(k0)] < tStart - Tsw) k0++;
+    const n = count - k0;
+    if (n < 2) return;
+    const T = new Float64Array(n), TR = new Float64Array(n), Q = new Uint8Array(n), U = new Float64Array(n), I = new Float64Array(n), ID = new Float64Array(n);
+    for (let k = 0; k < n; k++) { const j = idx(k0 + k); T[k] = B.t[j]; TR[k] = B.tri[j]; Q[k] = B.q[j]; U[k] = B.u[j]; I[k] = B.i[j]; ID[k] = B.id[j]; }
+    // kumulatiiviset integraalit
+    const cU = new Float64Array(n), cI = new Float64Array(n), cID = new Float64Array(n);
+    for (let k = 1; k < n; k++) { const h = T[k] - T[k - 1]; cU[k] = cU[k - 1] + U[k] * h; cI[k] = cI[k - 1] + 0.5 * (I[k] + I[k - 1]) * h; cID[k] = cID[k - 1] + 0.5 * (ID[k] + ID[k - 1]) * h; }
+    const avU = new Float64Array(n).fill(NaN), avI = new Float64Array(n).fill(NaN), avID = new Float64Array(n).fill(NaN);
+    let j = 0;
+    for (let k = 0; k < n; k++) {
+      while (j < k && T[j + 1] <= T[k] - Tsw + 1e-12) j++;
+      const span = T[k] - T[j];
+      if (span > Tsw * 0.995) { avU[k] = (cU[k] - cU[j]) / span; avI[k] = (cI[k] - cI[j]) / span; avID[k] = (cID[k] - cID[j]) / span; }
+    }
+    // viimeisen jakson tilastot
+    let iMin = Infinity, iMax = -Infinity, wMin = Infinity, wMax = -Infinity, idMin = Infinity, idMax = -Infinity;
+    for (let k = 0; k < n; k++) {
+      if (T[k] >= tEnd - Tsw) { iMin = Math.min(iMin, I[k]); iMax = Math.max(iMax, I[k]); }
+      if (T[k] >= tStart) { wMin = Math.min(wMin, I[k]); wMax = Math.max(wMax, I[k]); idMin = Math.min(idMin, ID[k]); idMax = Math.max(idMax, ID[k]); }
+    }
+    lastStats = { u: avU[n - 1], i: avI[n - 1], id: avID[n - 1], ripple: iMax - iMin, iMin, iMax };
+    iRange = smoothRange(iRange, wMin, wMax);
+    idRange = smoothRange(idRange, idMin, idMax);
+
+    const left = 46, right = 12, top = 8, gap = 16;
+    const rows = [
+      { name: "kantoaalto", h: 0.8, lo: -0.1, hi: 1.12 },
+      { name: "u", unit: "V", h: 1, lo: -12, hi: Udc + 14 },
+      { name: "i", unit: "A", h: 1.25, lo: iRange[0], hi: iRange[1] },
+      { name: "id", unit: "A", h: 1, lo: idRange[0], hi: idRange[1] },
+    ];
+    const totalH = H - top - 26 - gap * (rows.length - 1);
+    const hSum = rows.reduce((s, r) => s + r.h, 0);
+    let y0 = top;
+    const xOf = t => left + (t - tStart) / (tEnd - tStart) * (W - left - right);
+    const k1 = T.findIndex(t => t >= tStart);
+    ctx.font = "12px " + css("--font-body");
+    rows.forEach((r, ri) => {
+      const hh = totalH * r.h / hSum;
+      const yOf = v => y0 + hh - (v - r.lo) / (r.hi - r.lo) * hh;
+      // q=1 -tausta
+      ctx.fillStyle = col.soft;
+      let k = Math.max(k1, 1);
+      while (k < n) {
+        if (Q[k]) { const a = k; while (k < n && Q[k]) k++; ctx.fillRect(xOf(Math.max(T[a - 1], tStart)), y0, xOf(T[k - 1]) - xOf(Math.max(T[a - 1], tStart)), hh); } else k++;
+      }
+      // akselit ja ruudukko
+      ctx.strokeStyle = col.rule; ctx.lineWidth = 1; ctx.setLineDash([]);
+      ctx.beginPath(); ctx.moveTo(left, y0); ctx.lineTo(left, y0 + hh); ctx.stroke();
+      ctx.fillStyle = col.muted; ctx.textAlign = "right"; ctx.textBaseline = "middle";
+      let ticks;
+      if (ri === 0) ticks = [0, 1];
+      else if (ri === 1) ticks = [0, 50, 100];
+      else { const st = niceStep((r.hi - r.lo) / 4); ticks = []; for (let v = Math.ceil(r.lo / st) * st; v <= r.hi; v += st) ticks.push(Math.abs(v) < 1e-9 ? 0 : v); }
+      ticks.forEach(v => {
+        const y = yOf(v);
+        ctx.strokeStyle = v === 0 ? col.muted : col.rule; ctx.globalAlpha = v === 0 ? 0.6 : 1;
+        ctx.beginPath(); ctx.moveTo(left, y); ctx.lineTo(W - right, y); ctx.stroke(); ctx.globalAlpha = 1;
+        ctx.fillText(fmt(v, Math.abs(v) < 10 && v % 1 ? 1 : 0), left - 6, y);
+      });
+      // nimi
+      ctx.save(); ctx.font = "italic 15px " + css("--font-math"); ctx.fillStyle = col.ink; ctx.textAlign = "left"; ctx.textBaseline = "top";
+      const label = ri === 0 ? "v" : ri === 3 ? "i" : r.name;
+      ctx.fillText(label, 4, y0);
+      if (ri === 0 || ri === 3) { ctx.font = "11px " + css("--font-math"); ctx.fillText(ri === 0 ? "tri" : "d", 4 + ctx.measureText(label).width + 6, y0 + 7); }
+      ctx.restore();
+      const line = (arr, color, width, dash, stepwise) => {
+        ctx.strokeStyle = color; ctx.lineWidth = width; ctx.setLineDash(dash); ctx.beginPath();
+        let started = false;
+        for (let k = Math.max(k1 - 1, 0); k < n; k++) {
+          const v = arr[k]; if (Number.isNaN(v)) { started = false; continue; }
+          const x = xOf(Math.max(T[k], tStart)), y = yOf(v);
+          if (!started) { ctx.moveTo(x, y); started = true; }
+          else if (stepwise) { ctx.lineTo(xOf(Math.max(T[k - 1], tStart)), y); ctx.lineTo(x, y); }
+          else ctx.lineTo(x, y);
+        }
+        ctx.stroke(); ctx.setLineDash([]);
+      };
+      if (ri === 0) {
+        line(TR, col.wave, 1.6, [], false);
+        ctx.strokeStyle = col.avg; ctx.lineWidth = 1.6; ctx.setLineDash([6, 4]);
+        ctx.beginPath(); ctx.moveTo(left, yOf(P.d)); ctx.lineTo(W - right, yOf(P.d)); ctx.stroke(); ctx.setLineDash([]);
+        ctx.fillStyle = col.avg; ctx.textAlign = "right"; ctx.textBaseline = "bottom";
+        ctx.font = "italic 14px " + css("--font-math"); ctx.fillText("d", W - right - 2, yOf(P.d) - 2);
+      } else if (ri === 1) { line(U, col.wave, 1.8, [], true); line(avU, col.avg, 1.6, [6, 4], false); }
+      else if (ri === 2) {
+        line(I, col.wave, 1.8, [], false); line(avI, col.avg, 1.6, [6, 4], false);
+        // Δi-merkintä
+        if (lastStats.ripple > (r.hi - r.lo) * 0.02) {
+          const xr = W - right - 4, ya = yOf(iMax), yb = yOf(iMin);
+          ctx.strokeStyle = col.ink; ctx.lineWidth = 1;
+          ctx.beginPath(); ctx.moveTo(xr - 5, ya); ctx.lineTo(xr, ya); ctx.lineTo(xr, yb); ctx.lineTo(xr - 5, yb); ctx.stroke();
+        }
+      } else { line(ID, col.wave, 1.8, [], true); line(avID, col.avg, 1.6, [6, 4], false); }
+      y0 += hh + gap;
+    });
+    // aika-akseli: kytkentäjakson mitta
+    const yb = H - 14, xa = xOf(tEnd - Tsw), xb = xOf(tEnd);
+    ctx.strokeStyle = col.muted; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(xa, yb - 4); ctx.lineTo(xa, yb + 4); ctx.moveTo(xa, yb); ctx.lineTo(xb, yb); ctx.moveTo(xb, yb - 4); ctx.lineTo(xb, yb + 4); ctx.stroke();
+    ctx.fillStyle = col.ink; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    const parts = [["T", "italic 14px " + css("--font-math"), 0], ["sw", "11px " + css("--font-math"), 4], [" = " + fmt(Tsw * 1000, 2) + " ms", "12px " + css("--font-body"), 0]];
+    let tw = 0; parts.forEach(p => { ctx.font = p[1]; p.push(ctx.measureText(p[0]).width); tw += p[3]; });
+    let x = (xa + xb) / 2 - tw / 2;
+    ctx.fillStyle = col.panel; ctx.fillRect(x - 4, yb - 9, tw + 8, 18);
+    ctx.fillStyle = col.ink; ctx.textAlign = "left";
+    parts.forEach(p => { ctx.font = p[1]; ctx.fillText(p[0], x, yb + p[2]); x += p[3]; });
+
+    updateCircuit(dt, Math.max(Math.abs(iRange[0]), Math.abs(iRange[1])));
+    updateTable();
+  }
+  function updateTable() {
+    const uT = P.d * Udc, iT = (uT - P.e) / R, rT = P.d * (1 - P.d) * Udc / (P.fsw * P.L);
+    const s = lastStats || {};
+    const v = (x, u, n = 1) => Number.isFinite(x) ? fmt(x, n) + " " + u : "–";
+    $("uT").textContent = v(uT, "V"); $("uS").textContent = v(s.u, "V");
+    $("iT").textContent = v(iT, "A"); $("iS").textContent = v(s.i, "A");
+    $("idT").textContent = v(P.d * iT, "A"); $("idS").textContent = v(s.id, "A");
+    $("riT").textContent = v(rT, "A", 2); $("riS").textContent = v(s.ripple, "A", 2);
+    const p = uT * iT;
+    $("powerNote").textContent = Math.abs(p) < 1 ? "Keskimääräinen teho on nolla." :
+      p > 0 ? `Teho ${fmt(p / 1000, 2)} kW siirtyy yläjännitepuolelta kuormaan: katkoja laskee jännitettä.`
+            : `Teho ${fmt(-p / 1000, 2)} kW siirtyy kuormalta lähteeseen: katkoja nostaa jännitettä.`;
+  }
+
+  // ---- silmukka ----
+  let last = performance.now(), acc = 0;
+  function frame(now) {
+    const dt = Math.min((now - last) / 1000, 0.05); last = now;
+    if (playing) {
+      const Tsw = 1 / P.fsw, h = Tsw / N;
+      acc += speed * Tsw * dt;
+      let steps = Math.floor(acc / h); acc -= steps * h;
+      steps = Math.min(steps, 20 * N);
+      for (let k = 0; k < steps; k++) stepSim(h, true);
+      draw(dt);
+    }
+    requestAnimationFrame(frame);
+  }
+  readCtl(); toSteadyState();
+  $("play").textContent = playing ? "Pysäytä" : "Jatka";
+  new ResizeObserver(resize).observe(cv);
+  window.matchMedia("(prefers-color-scheme: dark)").addEventListener?.("change", () => draw());
+  new MutationObserver(() => draw()).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+  (document.fonts ? document.fonts.ready : Promise.resolve()).then(() => draw());
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

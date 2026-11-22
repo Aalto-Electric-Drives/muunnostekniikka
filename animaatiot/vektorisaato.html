@@ -1,0 +1,664 @@
+<!doctype html>
+<html lang="fi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Vektorisäätö</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=STIX+Two+Text:ital,wght@0,400;0,600;1,400;1,700&display=swap">
+<style>
+/* Asettelu: lohkokaavio ja signaalit ylhäällä, sen alla vektorit staattori- ja roottorikoordinaatistossa sekä aikakäyrät rinnakkain (kapealla allekkain), säätimet ja tehtävät alla. Värit kirjan kuvista. */
+:root {
+  --paper: #fbfbf8;
+  --panel: #f2f3ef;
+  --ink: #1d2128;
+  --muted: #5d6470;
+  --rule: #d9dbd4;
+  --iron: #e6e6e3;      /* kirjan harmaa */
+  --pa: #d0242b;        /* a-vaihe, kirjan punainen */
+  --pb: #17803a;        /* b-vaihe, kirjan vihreä */
+  --pc: #1f3fc4;        /* c-vaihe, kirjan sininen */
+  --wave: #1f3fc4;
+  --accent: #1f3fc4;
+  --font-body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --font-math: "STIX Two Text", "Times New Roman", Times, serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #15181d; --panel: #1d2128; --ink: #e8eaee; --muted: #9aa2ad; --rule: #333944;
+    --iron: #2b3038; --pa: #ff6b6b; --pb: #5fce80; --pc: #7f9bff; --wave: #7f9bff; --accent: #7f9bff;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #15181d; --panel: #1d2128; --ink: #e8eaee; --muted: #9aa2ad; --rule: #333944;
+  --iron: #2b3038; --pa: #ff6b6b; --pb: #5fce80; --pc: #7f9bff; --wave: #7f9bff; --accent: #7f9bff;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { margin: 0; }
+body {
+  background: var(--paper); color: var(--ink);
+  font: 15px/1.5 var(--font-body);
+  padding-inline: 16px; padding-block: 20px 40px;
+}
+.wrap { max-width: 1240px; margin: 0 auto; display: grid; gap: 20px; }
+header h1 { font: 600 1.7rem/1.2 var(--font-math); margin: 0 0 4px; text-wrap: balance; }
+header p { margin: 0; color: var(--muted); max-width: 78ch; }
+.m { font-family: var(--font-math); font-style: italic; }
+.m sub, .m sup { font-style: normal; font-size: .72em; }
+.m b { font-weight: 700; }
+.ss { display: inline-flex; flex-direction: column; vertical-align: middle; line-height: .95; font-size: .72em; font-style: normal; margin-left: .05em; }
+.top { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 8px 24px; align-items: start; }
+@media (max-width: 900px) { .top { grid-template-columns: minmax(0, 1fr); } }
+.scrollx { overflow-x: auto; }
+.scrollx svg { display: block; width: 100%; min-width: 620px; height: auto; }
+.hint { display: none; }
+@media (max-width: 700px) { .hint { display: block; } }
+.main { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; align-items: start; }
+@media (max-width: 1040px) { .main { grid-template-columns: repeat(2, minmax(0, 1fr)); } .main .wide { grid-column: 1 / -1; } }
+@media (max-width: 640px) { .main { grid-template-columns: minmax(0, 1fr); } }
+.card { background: var(--panel); border: 1px solid var(--rule); border-radius: 6px; padding: 14px; min-width: 0; }
+.card h2 { font: 600 .78rem/1.2 var(--font-body); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 0 0 10px; }
+.card h2 + .seg { margin-bottom: 6px; }
+svg.fig { width: 100%; height: auto; display: block; max-width: 440px; margin-inline: auto; }
+svg text { fill: var(--ink); font-family: var(--font-math); font-size: 14px; }
+svg .it { font-style: italic; }
+svg .b { font-weight: 700; }
+svg .small { font-size: 10px; font-style: normal; font-weight: 400; }
+svg .smi { font-size: 10px; font-style: italic; font-weight: 400; }
+svg .tick { font-size: 12px; fill: var(--muted); }
+svg text.fw { fill: var(--wave); } svg text.fr { fill: var(--pa); }
+svg text.blkt { font-family: var(--font-body); font-size: 13px; }
+.thin { fill: none; stroke: var(--muted); stroke-width: 1; }
+.axis { fill: none; stroke: var(--ink); stroke-width: 1; }
+.dash { stroke-dasharray: 5 4; }
+.grid { stroke: var(--rule); stroke-width: 1; fill: none; }
+.lin { fill: var(--iron); stroke: none; }
+.sa { stroke: var(--pa); } .sb { stroke: var(--pb); } .sc { stroke: var(--pc); } .si { stroke: var(--ink); } .sm { stroke: var(--muted); } .sw { stroke: var(--wave); } .sr { stroke: var(--pa); }
+.fa { fill: var(--pa); } .fb { fill: var(--pb); } .fc { fill: var(--pc); } .fi { fill: var(--ink); } .fm { fill: var(--muted); } .fw { fill: var(--wave); } .fr { fill: var(--pa); }
+.curve { fill: none; stroke-width: 1.8; stroke-linejoin: round; }
+.w { fill: none; stroke: var(--ink); stroke-width: 1.2; }
+.blk { fill: var(--paper); stroke: var(--ink); stroke-width: 1.3; }
+.node { fill: var(--ink); }
+.term { fill: var(--paper); stroke: var(--ink); stroke-width: 1.1; }
+.refdot { fill: none; stroke: var(--pa); stroke-width: 2; }
+.tplot { position: relative; height: 128px; }
+.tplot canvas, .tplot svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.seg { display: inline-flex; border: 1px solid var(--rule); border-radius: 6px; overflow: hidden; flex-wrap: wrap; }
+.seg button { border: 0; background: var(--paper); color: var(--ink); font: inherit; font-size: .88rem; padding: 5px 10px; cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--wave); color: var(--paper); }
+.seg button + button { border-left: 1px solid var(--rule); }
+button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+table.vals { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; font-size: .92rem; }
+table.vals th, table.vals td { padding: 3px 6px; border-bottom: 1px solid var(--rule); text-align: right; white-space: nowrap; }
+table.vals th { font-weight: 400; }
+table.vals th:first-child { text-align: left; white-space: normal; }
+table.vals thead th { color: var(--muted); font-size: .85rem; }
+table.vals + table.vals { margin-top: 10px; }
+.note { color: var(--muted); font-size: .85rem; margin: 8px 0 0; }
+.legend { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: .85rem; color: var(--muted); margin: 6px 0 0; }
+.legend i { display: inline-block; width: 18px; height: 0; border-top: 2px solid; vertical-align: middle; margin-right: 5px; }
+.legend i.dsh { border-top-style: dashed; }
+.controls { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px 24px; margin-top: 14px; }
+.ctl label { display: flex; justify-content: space-between; gap: 8px; font-size: .92rem; }
+.ctl output { font-variant-numeric: tabular-nums; font-weight: 600; }
+.ctl input[type=range] { width: 100%; accent-color: var(--wave); }
+.bar { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; }
+.bar + .bar { margin-top: 12px; }
+.btn { border: 1px solid var(--wave); background: var(--wave); color: var(--paper); font: 500 .9rem var(--font-body); padding: 6px 14px; border-radius: 6px; cursor: pointer; }
+.btn.ghost { background: transparent; color: var(--wave); }
+.check { display: inline-flex; gap: 6px; align-items: center; font-size: .9rem; }
+.tasks ol { margin: 0; padding-left: 1.3em; display: grid; gap: 10px; }
+.tasks li { max-width: 80ch; }
+.tasks details { margin-top: 3px; }
+.tasks summary { cursor: pointer; color: var(--wave); font-size: .88rem; }
+.tasks details p { margin: 4px 0 0; color: var(--muted); }
+footer { color: var(--muted); font-size: .82rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>Kestomagnetoidun tahtikoneen vektorisäätö</h1>
+  <p>Kirjan luku 14. Nopeussäädin antaa vääntömomentin ohjearvon, josta lasketaan virran ohjearvo roottorikoordinaatistossa. Virtasäädin ohjaa virtavektoria suuntaajan jännitteellä. Muuta nopeusohjetta ja kuormamomenttia ja seuraa, miltä samat suureet näyttävät staattori- ja roottorikoordinaatistossa.</p>
+  <p><strong>Vapaaehtoinen syventävä materiaali. Ei kuulu koealueeseen.</strong></p>
+</header>
+
+<section class="card" aria-labelledby="h-bd">
+  <h2 id="h-bd">Lohkokaavio</h2>
+  <div class="top">
+    <div class="scrollx"><svg id="bd" viewBox="0 0 760 246" role="img" aria-label="Vektorisäädön lohkokaavio: nopeussäädin, virtaohje, virtasäädin, koordinaatistomuunnokset, pulssinleveysmodulaattori, suuntaaja ja kone"></svg></div>
+    <div>
+      <table class="vals" aria-label="Säätöjärjestelmän signaalit">
+        <thead><tr><th>Suure</th><th>Ohjearvo</th><th>Toteutunut</th></tr></thead>
+        <tbody>
+          <tr><th><span class="m">ω</span><sub>M</sub> (rad/s)</th><td id="vWr"></td><td id="vW"></td></tr>
+          <tr><th><span class="m">τ</span><sub>M</sub> (Nm)</th><td id="vTr"></td><td id="vT"></td></tr>
+          <tr><th><span class="m">i</span><sub>d</sub> (A)</th><td id="vIdr"></td><td id="vId"></td></tr>
+          <tr><th><span class="m">i</span><sub>q</sub> (A)</th><td id="vIqr"></td><td id="vIq"></td></tr>
+          <tr><th>|<span class="m"><b>u</b></span><sub>s</sub>| (V)</th><td id="vUr"></td><td id="vU"></td></tr>
+        </tbody>
+      </table>
+      <table class="vals" aria-label="Muut suureet">
+        <tbody>
+          <tr><th>Roottorin sähkökulma <span class="m">ϑ</span><sub>m</sub></th><td id="vTh"></td></tr>
+          <tr><th>Syöttötaajuus |<span class="m">ω</span><sub>m</sub>|/(2π)</th><td id="vF"></td></tr>
+          <tr><th>Mekaaninen teho <span class="m">τ</span><sub>M</sub><span class="m">ω</span><sub>M</sub></th><td id="vP"></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <p class="note hint">Vieritä kaaviota sivusuunnassa.</p>
+  <p class="note">Vrt. kuva 14.1. Muunnoslohkojen e<sup>±j<span class="m">ϑ</span><sub>m</sub></sup> vasemmalla puolella suureet ovat roottorikoordinaatistossa ja oikealla puolella staattorikoordinaatistossa.</p>
+</section>
+
+<div class="main">
+  <section class="card" aria-labelledby="h-sp">
+    <h2 id="h-sp">Staattorikoordinaatisto</h2>
+    <svg id="sp" class="fig" viewBox="-185 -185 370 370" role="img" aria-label="Jännite- ja virtavektori staattorikoordinaatistossa sekä roottorin d- ja q-akseli"></svg>
+    <div class="legend">
+      <span><i style="border-color:var(--ink)"></i>jännite <span class="m"><b>u</b><span class="ss"><span>s</span><span>s</span></span></span></span>
+      <span><i style="border-color:var(--wave)"></i>virta <span class="m"><b>i</b><span class="ss"><span>s</span><span>s</span></span></span></span>
+      <span><i class="dsh" style="border-color:var(--ink)"></i>d- ja q-akseli</span>
+    </div>
+    <p class="note">Kuusikulmio ja varjostettu ympyrä ovat suuntaajan jänniterajat (kuva 13.3). Jännitteellä ja virralla on eri mittakaavat.</p>
+  </section>
+
+  <section class="card" aria-labelledby="h-rp">
+    <h2 id="h-rp">Roottorikoordinaatisto</h2>
+    <div class="seg" role="group" aria-label="Roottorikoordinaatiston esitys">
+      <button type="button" data-view="lim">Virta ja rajat</button>
+      <button type="button" data-view="vec">Vektoridiagrammi</button>
+    </div>
+    <svg id="rp" class="fig" viewBox="-185 -185 370 370" role="img" aria-label="Virtavektori sekä virta- ja jänniteraja roottorikoordinaatistossa"></svg>
+    <div class="legend" id="lgLim">
+      <span><i style="border-color:var(--wave)"></i>virta <span class="m"><b>i</b></span><sub>s</sub></span>
+      <span><span style="color:var(--pa)">○</span> ohjearvo <span class="m"><b>i</b></span><sub>s,ref</sub></span>
+      <span><i class="dsh" style="border-color:var(--wave)"></i>virtaraja</span>
+      <span><i class="dsh" style="border-color:var(--pa)"></i>jänniteraja</span>
+    </div>
+    <div class="legend" id="lgVec" hidden>
+      <span><i style="border-color:var(--pa)"></i>käämivuot</span>
+      <span><i style="border-color:var(--wave)"></i>virta</span>
+      <span><i style="border-color:var(--ink)"></i>jännite</span>
+    </div>
+    <p class="note" id="rpNote"></p>
+  </section>
+
+  <section class="card wide" aria-labelledby="h-tp">
+    <h2 id="h-tp">Käyrät</h2>
+    <div class="seg" role="group" aria-label="Käyrien aikaikkuna">
+      <button type="button" data-win="0.6">0,6 s</button>
+      <button type="button" data-win="0.1">0,1 s</button>
+      <button type="button" data-win="0.02">0,02 s</button>
+    </div>
+    <div class="tplot" id="pw"><canvas></canvas><svg role="img" aria-label="Kulmanopeus ja sen ohjearvo ajan funktiona"></svg></div>
+    <div class="tplot" id="pi"><canvas></canvas><svg role="img" aria-label="Virran d- ja q-komponentti ajan funktiona"></svg></div>
+    <div class="tplot" id="pabc"><canvas></canvas><svg role="img" aria-label="Vaihevirrat ajan funktiona"></svg></div>
+    <div class="legend">
+      <span><i style="border-color:var(--wave)"></i><span class="m">ω</span><sub>M</sub> ja <span class="m">i</span><sub>d</sub></span>
+      <span><i class="dsh" style="border-color:var(--ink)"></i><span class="m">ω</span><sub>M,ref</sub></span>
+      <span><i style="border-color:var(--pa)"></i><span class="m">i</span><sub>q</sub> ja <span class="m">i</span><sub>a</sub></span>
+      <span><i style="border-color:var(--pb)"></i><span class="m">i</span><sub>b</sub></span>
+      <span><i style="border-color:var(--pc)"></i><span class="m">i</span><sub>c</sub></span>
+    </div>
+    <p class="note">Aika <span class="m">t</span> = <span id="vTime"></span> s. Vrt. kuva 14.6.</p>
+  </section>
+</div>
+
+<section class="card" aria-labelledby="h-ctl">
+  <h2 id="h-ctl">Säätimet</h2>
+  <div class="bar">
+    <button type="button" class="btn" id="play">Pysäytä</button>
+    <button type="button" class="btn ghost" id="fig">Kuvan 14.6 esimerkki</button>
+    <button type="button" class="btn ghost" id="reset">Alkutilaan</button>
+    <span class="seg" role="group" aria-label="Animaation nopeus">
+      <button type="button" data-speed="slow">Hidas</button>
+      <button type="button" data-speed="norm">Normaali</button>
+      <button type="button" data-speed="fast">Nopea</button>
+    </span>
+    <label class="check"><input type="checkbox" id="fw" checked> Kentänheikennys käytössä</label>
+  </div>
+  <div class="controls">
+    <div class="ctl"><label for="n"><span>Nopeusohje <span class="m">ω</span><sub>M,ref</sub></span><output id="nO"></output></label><input type="range" id="n" min="-50" max="50" step="1" value="0"></div>
+    <div class="ctl"><label for="tau"><span>Kuormamomentti <span class="m">τ</span><sub>L</sub></span><output id="tauO"></output></label><input type="range" id="tau" min="-15" max="15" step="1" value="0"></div>
+  </div>
+  <p class="note">Animaatio on hidastettu. Sekunti vastaa hitaalla nopeudella 10 ms, normaalilla 40 ms ja nopealla 200 ms. Koneen suurin jatkuva vääntömomentti on 15 Nm nopeudella 2π · 40 rad/s = 2 400 r/min.</p>
+</section>
+
+<section class="card tasks" aria-labelledby="h-tasks">
+  <h2 id="h-tasks">Kokeile itse</h2>
+  <ol>
+    <li>Aja "Kuvan 14.6 esimerkki". Miksi <span class="m">i</span><sub>q</sub> pysyy kiihdytyksen ajan vakiona ja nopeus kasvaa lineaarisesti?
+      <details><summary>Vastaus</summary><p>Nopeussäädin pyytää askeleen jälkeen suurta vääntömomenttia, mutta virtaohje rajoitetaan arvoon <span class="m">i</span><sub>max</sub> = 15 A, yhtälö (14.10). Vääntömomentti on verrannollinen virtaan <span class="m">i</span><sub>q</sub>, yhtälö (12.23), joten momentti ja kiihtyvyys ovat vakioita. Kun nopeus lähestyy ohjearvoa, säädin pienentää momenttia ja virta palaa nollaan.</p></details></li>
+    <li>Vertaa samassa ajossa vaihevirtoja ja roottorikoordinaatiston virtaa. Mikä on vaihevirtojen taajuus, kun <span class="m">ω</span><sub>M</sub> = 2π · 8 rad/s?
+      <details><summary>Vastaus</summary><p>Vaihevirrat ovat sinimuotoisia ja niiden amplitudi on |<span class="m"><b>i</b></span><sub>s</sub>|. Roottorikoordinaatistossa sama virta on pysyvässä tilassa vakio, mikä tekee säädöstä yksinkertaisen. Taajuus on <span class="m">n</span><sub>p</sub> · 8 Hz = 32 Hz, koska <span class="m">ω</span><sub>m</sub> = <span class="m">n</span><sub>p</sub><span class="m">ω</span><sub>M</sub> ja koneessa on kahdeksan napaa.</p></details></li>
+    <li>Katso ajon loppua, jossa nopeus on negatiivinen ja kuormamomentti positiivinen. Mihin suuntaan teho siirtyy? Valitse "Vektoridiagrammi" ja katso virta- ja jännitevektorin suuntia.
+      <details><summary>Vastaus</summary><p>Vääntömomentti on positiivinen ja nopeus negatiivinen, joten mekaaninen teho on negatiivinen. Kone toimii generaattorina ja teho siirtyy tasajännitevälipiiriin. Vektoridiagrammissa virta on q-akselin suuntaan ja jännite likimain vastakkaiseen suuntaan.</p></details></li>
+    <li>Aseta kuormamomentti nollaksi ja nopeusohjeeksi 2π · 40 rad/s. Kuinka suuri jännite on pysyvässä tilassa? Vertaa sitä jänniterajaan.
+      <details><summary>Vastaus</summary><p>Tyhjäkäynnissä jännite on kestomagneettien indusoima jännite <span class="m">ω</span><sub>m</sub><span class="m">ψ</span><sub>f</sub> = 2π · 160 rad/s · 0,31 Vs ≈ 312 V. Se on sama kuin lineaarisen modulointialueen raja <span class="m">U</span><sub>dc</sub>/√3 ≈ 312 V. Jännitevektorin kärki on siis varjostetun ympyrän kehällä, ja tätä suuremmilla nopeuksilla jännite ei enää riitä ilman kentänheikennystä.</p></details></li>
+    <li>Kasvata nopeusohje arvoon 2π · 48 rad/s. Mitä virralle <span class="m">i</span><sub>d</sub> tapahtuu? Laske sen arvo yhtälöstä (14.13) ja vertaa.
+      <details><summary>Vastaus</summary><p>Kentänheikennys (14.12) pienentää ohjearvoa <span class="m">i</span><sub>d,ref</sub>, kunnes jännite on rajalla. Tyhjäkäynnissä yhtälöstä (14.13) saadaan <span class="m">i</span><sub>d</sub> = (<span class="m">u</span><sub>max</sub>/<span class="m">ω</span><sub>m</sub> − <span class="m">ψ</span><sub>f</sub>)/<span class="m">L</span><sub>s</sub> ≈ −10,6 A, kun <span class="m">ω</span><sub>m</sub> = 2π · 192 rad/s. Vektoridiagrammissa negatiivinen <span class="m">i</span><sub>d</sub> lyhentää staattorin käämivuota <span class="m"><b>ψ</b></span><sub>s</sub>, kuva 14.4(b).</p></details></li>
+    <li>Aseta nopeusohjeeksi 2π · 50 rad/s ja kasvata kuormamomentti arvoon 15 Nm. Pysyykö nopeus ohjearvossaan? Miksi käyttö jaksaa vähemmän kuin pienillä nopeuksilla?
+      <details><summary>Vastaus</summary><p>Nopeus putoaa noin arvoon 2π · 48,6 rad/s. Virtaraja koskee koko virtavektoria, yhtälö (14.10). Nopeudella 2π · 50 rad/s kentänheikennys tarvitsee virran <span class="m">i</span><sub>d</sub> ≈ −12,7 A, joten momenttia tuottavalle virralle jää enintään <span class="m">i</span><sub>q</sub> ≈ 7,9 A. Se vastaa momenttia 14,8 Nm, joka ei riitä kuormalle. Pienillä nopeuksilla koko virta 15 A on käytettävissä momentin tuottamiseen, ja momentti on lähes kaksinkertainen.</p></details></li>
+    <li>Palaa tyhjäkäyntiin, poista kentänheikennys käytöstä ja aseta nopeusohjeeksi 2π · 48 rad/s. Mitä tapahtuu?
+      <details><summary>Vastaus</summary><p>Nopeus jää noin arvoon 2π · 43 rad/s. Indusoituva jännite on kasvanut suuntaajan suurimman jännitteen tasolle, joten virtaa ei enää saada kasvatettua eikä kone kiihdy. Jännite kulkee kuusikulmion reunaa pitkin, jolloin virtaan syntyy kuudes yliaalto. Kentänheikennys tarvitaan, jotta toiminta-alue jatkuu nimellisnopeuden yläpuolelle.</p></details></li>
+  </ol>
+</section>
+
+<footer>ELEC-C8003 Sähköenergian muunnostekniikka. Kone on laskuharjoituksen 6 kestomagnetoitu tahtikone: <span class="m">n</span><sub>p</sub> = 4, <span class="m">L</span><sub>s</sub> = 4,86 mH, <span class="m">R</span><sub>s</sub> = 0,46 Ω ja <span class="m">ψ</span><sub>f</sub> = 0,31 Vs. Muut arvot ovat <span class="m">U</span><sub>dc</sub> = 540 V, <span class="m">i</span><sub>max</sub> = 15 A, <span class="m">J</span> = 0,03 kgm², <span class="m">α</span><sub>c</sub> = 2π · 300 rad/s, <span class="m">α</span><sub>s</sub> = 2π · 10 rad/s ja <span class="m">k</span><sub>ψ</sub> = 25 A/(Vs). Säätimet ovat kirjan yhtälöiden mukaiset jatkuva-aikaiset säätimet, ja parametriestimaatit ovat tarkat. Suuntaaja on mallinnettu kytkentäjakson yli keskiarvoistetulla jännitteellä, joka rajoittuu jännitekuusikulmioon. Yhtälö- ja kuvanumerot viittaavat kurssikirjan versioon 11/2026.</footer>
+</div>
+
+<script>
+(() => {
+  "use strict";
+  const $ = id => document.getElementById(id);
+  const NS = "http://www.w3.org/2000/svg";
+  const TAU = 2 * Math.PI, S3 = Math.sqrt(3);
+  const fmt = (x, n = 1) => (Math.abs(x) < 0.5 * Math.pow(10, -n) ? 0 : x).toFixed(n).replace(".", ",").replace("-", "−");
+  const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  const reduce = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  // ---- parametrit ----
+  const M = { np: 4, Ls: 4.86e-3, Rs: 0.46, psif: 0.31, Udc: 540, imax: 15, J: 0.03, ac: TAU * 300, as: TAU * 10, kpsi: 25 };
+  const umax = M.Udc / S3;                      // lineaarisen modulointialueen raja
+  const ktau = 2 / (3 * M.np * M.psif);         // virtaohjeen vakio, yhtälö (14.9)
+  const kt = M.ac * M.Ls, ki = M.ac * M.ac * M.Ls;                                      // virtasäädin, yhtälö (14.6)
+  const kts = M.as * M.J, kps = 2 * M.as * M.J, kis = M.as * M.as * M.J;                // nopeussäädin, luku 10
+  const H = 50e-6, REC = 2;                     // aika-askel (s) ja tallennusväli (askelta)
+  let WIN = 0.6;                                // käyrien aikaikkuna (s)
+
+  // ---- simulointimalli ----
+  // Tila X = [i_d, i_q, ω_M, ϑ_M, u_i:n d- ja q-komponentti, nopeussäätimen integraattori, i_d,ref]
+  const X = new Float64Array(8), K = [0, 1, 2, 3].map(() => new Float64Array(8)), XT = new Float64Array(8);
+  const U = { n: 0, tau: 0, fw: true };         // nopeusohje ω_M,ref = 2πn, kuormamomentti ja kentänheikennys
+  const S = { tauRef: 0, idr: 0, iqr: 0, udr: 0, uqr: 0, ud: 0, uq: 0 };   // säätimen signaalit
+  let t = 0;
+  // Suuntaajan toteuttama keskiarvoistettu jännite staattorikoordinaatistossa: pulssisuhteet (13.10) ja (13.11) rajattuna välille 0...1
+  function inverter(ual, ube) {
+    const u = [ual, -ual / 2 + S3 / 2 * ube, -ual / 2 - S3 / 2 * ube];
+    const u0 = -(Math.min(u[0], u[1], u[2]) + Math.max(u[0], u[1], u[2])) / 2;
+    const d = u.map(v => Math.min(1, Math.max(0, 0.5 + (v + u0) / M.Udc)));
+    return [(2 / 3) * (d[0] - (d[1] + d[2]) / 2) * M.Udc, (d[1] - d[2]) / S3 * M.Udc];
+  }
+  function deriv(x, dx, save) {
+    const id = x[0], iq = x[1], wM = x[2], uid = x[4], uiq = x[5], idref = x[7], wm = M.np * wM, wref = TAU * U.n;
+    // nopeussäädin: kahden vapausasteen PI-säädin ja integraattorin kasautumisen esto
+    const tauUnl = kts * wref - kps * wM + x[6];
+    const tauMax = Math.sqrt(Math.max(M.imax * M.imax - idref * idref, 0)) / ktau;      // virtaraja (14.10)
+    const tauRef = Math.max(-tauMax, Math.min(tauMax, tauUnl));
+    // virtaohje (14.9)
+    const idr = idref, iqr = ktau * tauRef;
+    // virtasäädin (14.8): k_p = (2α_c − jω_m)L_s − R_s on kompleksinen
+    const kpr = 2 * M.ac * M.Ls - M.Rs, kpi = -wm * M.Ls;
+    const udr = kt * idr - (kpr * id - kpi * iq) + uid, uqr = kt * iqr - (kpr * iq + kpi * id) + uiq;
+    // muunnos staattorikoordinaatistoon, suuntaaja ja muunnos takaisin
+    const th = M.np * x[3], c = Math.cos(th), s = Math.sin(th);
+    const us = inverter(udr * c - uqr * s, udr * s + uqr * c);
+    const ud = us[0] * c + us[1] * s, uq = -us[0] * s + us[1] * c;
+    // kentänheikennys (14.12)
+    let didref = U.fw ? M.kpsi * (umax - Math.hypot(udr, uqr)) : 0;
+    if ((idref >= 0 && didref > 0) || (idref <= -M.imax && didref < 0)) didref = 0;
+    dx[0] = (ud - M.Rs * id + wm * M.Ls * iq) / M.Ls;                                   // kone (14.1)
+    dx[1] = (uq - M.Rs * iq - wm * M.Ls * id - wm * M.psif) / M.Ls;
+    dx[2] = (1.5 * M.np * M.psif * iq - U.tau) / M.J;
+    dx[3] = wM;
+    dx[4] = ki * (idr - id + (ud - udr) / kt);
+    dx[5] = ki * (iqr - iq + (uq - uqr) / kt);
+    dx[6] = kis * (wref - wM + (tauRef - tauUnl) / kts);
+    dx[7] = didref;
+    if (save) { S.tauRef = tauRef; S.idr = idr; S.iqr = iqr; S.udr = udr; S.uqr = uqr; S.ud = ud; S.uq = uq; }
+  }
+  function step() {                             // neljännen kertaluvun Runge–Kutta
+    deriv(X, K[0], false);
+    for (let i = 0; i < 8; i++) XT[i] = X[i] + H / 2 * K[0][i];
+    deriv(XT, K[1], false);
+    for (let i = 0; i < 8; i++) XT[i] = X[i] + H / 2 * K[1][i];
+    deriv(XT, K[2], false);
+    for (let i = 0; i < 8; i++) XT[i] = X[i] + H * K[2][i];
+    deriv(XT, K[3], false);
+    for (let i = 0; i < 8; i++) X[i] += H / 6 * (K[0][i] + 2 * K[1][i] + 2 * K[2][i] + K[3][i]);
+    X[7] = Math.min(0, Math.max(-M.imax, X[7]));
+    t += H;
+  }
+
+  // ---- tallennus käyriä varten ----
+  const NB = 8192, CH = ["t", "w", "wr", "id", "iq", "ia", "ib", "ic"], B = {};
+  CH.forEach(c => { B[c] = new Float32Array(NB); });
+  let head = 0, count = 0, sub = 0;
+  function record() {
+    const th = M.np * X[3], c = Math.cos(th), s = Math.sin(th), ial = X[0] * c - X[1] * s, ibe = X[0] * s + X[1] * c;
+    B.t[head] = t; B.w[head] = X[2]; B.wr[head] = TAU * U.n; B.id[head] = X[0]; B.iq[head] = X[1];
+    B.ia[head] = ial; B.ib[head] = -ial / 2 + S3 / 2 * ibe; B.ic[head] = -ial / 2 - S3 / 2 * ibe;
+    head = (head + 1) % NB; count = Math.min(count + 1, NB);
+  }
+  const at = k => (head - count + k + NB) % NB;                 // k = 0 on vanhin näyte
+
+  // ---- ajon ohjaus ----
+  let playing = !reduce, speed = "norm", view = "lim", acc = 0, scn = null, last = performance.now();
+  const RATE = { slow: 0.01, norm: 0.04, fast: 0.2 };          // simuloitua aikaa sekunnissa
+  const setPlay = on => { playing = on; $("play").textContent = playing ? "Pysäytä" : "Jatka"; last = performance.now(); };
+  function setN(v) { U.n = v; $("n").value = v; $("nO").textContent = `2π · ${fmt(v, 0)} rad/s = ${fmt(v * 60, 0)} r/min`; }
+  function setTau(v) { U.tau = v; $("tau").value = v; $("tauO").textContent = `${fmt(v, 0)} Nm`; }
+  function reset() { X.fill(0); t = 0; acc = 0; head = 0; count = 0; sub = 0; scn = null; setN(0); setTau(0); deriv(X, K[0], true); record(); }
+  // Kuvan 14.6 ajo: nopeusohjeen askel hetkellä 0,1 s, kuormamomentin askel hetkellä 0,3 s ja suunnanvaihto hetkellä 0,4 s
+  const FIG = [[0.1, () => setN(8)], [0.3, () => setTau(14)], [0.4, () => setN(-8)], [0.6, () => { scn = null; setPlay(false); }]];
+  function advance(T) {                         // etene simuloidussa ajassa T
+    acc += T;
+    while (acc >= H) {
+      step(); acc -= H;
+      if (++sub >= REC) { sub = 0; deriv(X, K[0], true); record(); }
+      if (scn && t >= FIG[scn.i][0] - 1e-9) { const ev = FIG[scn.i++]; ev[1](); if (!playing) { acc = 0; break; } }
+    }
+    deriv(X, K[0], true);
+  }
+
+  // ---- SVG-apufunktiot ----
+  function el(parent, tag, attrs = {}, text) {
+    const e = document.createElementNS(NS, tag);
+    for (const k in attrs) e.setAttribute(k, attrs[k]);
+    if (text !== undefined) e.textContent = text;
+    parent.appendChild(e); return e;
+  }
+  const SUBW = { ",": 2.5, f: 3.2, r: 3.4, t: 2.9, i: 2.8, j: 2.8, m: 7.6, M: 8.6 };   // indeksin merkkien likimääräiset leveydet pinottuja indeksejä varten
+  // Matemaattinen merkintä: "i_d", "#u#_{s,ref}^s" (lihava), "\\M\\" (pysty). Ala- ja yläindeksit ovat pystyjä. Koordinaatti y kasvaa ylöspäin.
+  function mtext(parent, x0, y0, s, attrs = {}) {
+    const tx = el(parent, "text", Object.assign({ x: x0, y: -y0 }, attrs));
+    let i = 0, bold = false, up = false, back = 0, shift = 0;
+    const span = (txt, cls, dy, dx) => { const a = { class: cls }; if (dy) a.dy = dy; if (dx) a.dx = dx; el(tx, "tspan", a, txt); };
+    while (i < s.length) {
+      const c = s[i];
+      if (c === "#") { bold = !bold; i++; continue; }
+      if (c === "\\") { up = !up; i++; continue; }
+      if (c === "_" || c === "^") {
+        let body; i++;
+        if (s[i] === "{") { const j = s.indexOf("}", i); body = s.slice(i + 1, j); i = j + 1; } else { body = s[i]; i++; }
+        const target = c === "_" ? 3.5 : -6;
+        span(body, "small", target - shift, back ? -back : 1.5);
+        back = back ? 0 : [...body].reduce((w, ch) => w + (SUBW[ch] || 4.2), 0); shift = target;
+        if (!(s[i] === "_" || s[i] === "^")) back = 0;
+        continue;
+      }
+      back = 0;
+      span(c, (up ? "" : "it") + (bold ? " b" : ""), -shift, 0); shift = 0;
+      i++;
+    }
+    return tx;
+  }
+  // Nuoli, jonka kärki on kirjan tyylin mukaan kovera. Koordinaatti y kasvaa ylöspäin.
+  function arrow(parent, key, w = 1.6, head = 1) {
+    const g = el(parent, "g");
+    const ln = el(g, "line", { class: "s" + key, "stroke-width": w });
+    const hd = el(g, "path", { class: "f" + key, stroke: "none" });
+    const L = 10 * head, Wd = 4.2 * head;
+    return {
+      g,
+      set(x1, y1, x2, y2) {
+        const dx = x2 - x1, dy = y2 - y1, len = Math.hypot(dx, dy);
+        if (len < 2.5) { g.setAttribute("visibility", "hidden"); return this; }
+        g.removeAttribute("visibility");
+        const ux = dx / len, uy = dy / len, l = Math.min(L, len), k = l / L;
+        const bx = x2 - ux * l, by = y2 - uy * l;
+        ln.setAttribute("x1", x1); ln.setAttribute("y1", -y1); ln.setAttribute("x2", x2 - ux * l * 0.7); ln.setAttribute("y2", -(y2 - uy * l * 0.7));
+        const px = -uy * Wd * k, py = ux * Wd * k, nx = x2 - ux * l * 0.75, ny = y2 - uy * l * 0.75;
+        hd.setAttribute("d", `M${x2} ${-y2} L${bx + px} ${-(by + py)} L${nx} ${-ny} L${bx - px} ${-(by - py)} Z`);
+        return this;
+      },
+    };
+  }
+  const pol = (r, a) => [r * Math.cos(a), r * Math.sin(a)];
+  const f1 = v => v.toFixed(1);
+  const place = (tx, x0, y0) => { tx.setAttribute("x", f1(x0)); tx.setAttribute("y", f1(-y0)); };   // siirrä tekstiä, y ylöspäin
+
+  // ---- lohkokaavio (kuva 14.1) ----
+  {
+    const bd = $("bd");
+    const wire = d => el(bd, "path", { class: "w", d });
+    const head = (x0, y0, ang) => el(bd, "path", { class: "fi", d: "M0 0 l-9 -3.8 l2.2 3.8 l-2.2 3.8 z", transform: `translate(${x0} ${y0}) rotate(${ang})` });
+    const block = (x0, y0, w, h, lines) => {
+      el(bd, "rect", { class: "blk", x: x0, y: y0, width: w, height: h });
+      lines.forEach((s, i) => el(bd, "text", { class: "blkt", x: x0 + w / 2, y: y0 + h / 2 + 5 + (i - (lines.length - 1) / 2) * 15, "text-anchor": "middle" }, s));
+    };
+    const expo = (x0, y0, sign) => {            // e^{±jϑ_m}
+      const tx = el(bd, "text", { x: x0, y: y0, "text-anchor": "middle" });
+      el(tx, "tspan", {}, "e"); el(tx, "tspan", { class: "small", dy: -6, dx: 0.5 }, sign + "j"); el(tx, "tspan", { class: "smi" }, "ϑ"); el(tx, "tspan", { style: "font-size:8px", dy: 2 }, "m");
+    };
+    // signaalit
+    wire("M18 48 H76"); head(78, 48, 0); mtext(bd, 18, -40, "ω_{M,ref}");
+    wire("M158 60 H204"); head(206, 60, 0); mtext(bd, 162, -52, "τ_{M,ref}");
+    wire("M246 8 V36"); head(246, 38, 90); mtext(bd, 240, -20, "i_{d,ref}", { "text-anchor": "end" });
+    wire("M286 60 H334"); head(336, 60, 0); mtext(bd, 290, -52, "#i#_{s,ref}");
+    wire("M420 72 H466"); head(468, 72, 0); mtext(bd, 423, -64, "#u#_{s,ref}");
+    wire("M518 72 H564"); head(566, 72, 0); mtext(bd, 521, -62, "#u#_{s,ref}^s");
+    wire("M616 72 H662 M636 78 l6 -12 M640 78 l6 -12 M644 78 l6 -12"); head(664, 72, 0); mtext(bd, 622, -58, "q_{abc}");
+    wire("M690 98 V205 M684 108 l12 6 M684 112 l12 6 M684 116 l12 6");
+    wire("M686 150 H520"); head(518, 150, 180); mtext(bd, 634, -142, "#i#_s^s");
+    wire("M468 150 H316 V84 H334"); head(336, 84, 0); mtext(bd, 440, -142, "#i#_s");
+    wire("M673 222 H520"); head(518, 222, 180); mtext(bd, 628, -214, "ϑ_M");
+    wire("M591 222 V208"); head(591, 206, 270);
+    wire("M591 172 V112 H493 M493 112 V94 M493 112 V128"); head(493, 92, 270); head(493, 130, 90); mtext(bd, 530, -106, "ϑ_m");
+    wire("M468 222 H58 V70 H76"); head(78, 70, 0); mtext(bd, 432, -214, "ω_M");
+    el(bd, "circle", { class: "node", cx: 591, cy: 222, r: 2.4 }); el(bd, "circle", { class: "node", cx: 493, cy: 112, r: 2.4 });
+    el(bd, "circle", { class: "term", cx: 690, cy: 150, r: 4 }); el(bd, "circle", { class: "node", cx: 690, cy: 150, r: 1.5 });
+    // lohkot
+    block(78, 38, 80, 44, ["nopeus-", "säädin"]);
+    block(206, 38, 80, 44, ["virta-", "ohje"]);
+    block(336, 46, 84, 52, ["virta-", "säädin"]);
+    block(468, 52, 50, 40, []); expo(491, 77, "");
+    block(566, 52, 50, 40, ["PWM"]);
+    block(468, 130, 50, 40, []); expo(489, 155, "−");
+    block(572, 172, 38, 34, []); mtext(bd, 591, -194, "n_p", { "text-anchor": "middle" });
+    block(468, 205, 50, 34, []); mtext(bd, 493, -227, "\\d/d\\t", { "text-anchor": "middle" });
+    // suuntaaja, tasajännitevälipiiri ja kone
+    el(bd, "rect", { class: "blk", x: 664, y: 46, width: 52, height: 52 }); wire("M664 98 L716 46 M672 58 h14 M672 63 h14 M694 84 q4 -6 8 0 t8 0");
+    wire("M678 46 V25.5 M702 46 V25.5 M678 34 H687 M693 34 H702"); el(bd, "path", { class: "w", "stroke-width": 2.2, d: "M687 27 V41 M693 27 V41" });
+    el(bd, "circle", { class: "node", cx: 678, cy: 34, r: 2.2 }); el(bd, "circle", { class: "node", cx: 702, cy: 34, r: 2.2 });
+    el(bd, "circle", { class: "term", cx: 678, cy: 22, r: 2.6 }); el(bd, "circle", { class: "term", cx: 702, cy: 22, r: 2.6 });
+    el(bd, "circle", { class: "blk", cx: 690, cy: 222, r: 17 }); el(bd, "text", { x: 690, y: 227, "text-anchor": "middle" }, "M");
+  }
+
+  // ---- staattorikoordinaatisto ----
+  const SU = 195 / M.Udc, SI = 7;               // mittakaavat: kuvapistettä volttia ja ampeeria kohti
+  const sp = $("sp");
+  el(sp, "circle", { r: f1(umax * SU), class: "lin" });
+  el(sp, "path", { class: "axis dash", d: "M" + [0, 1, 2, 3, 4, 5].map(k => { const p = pol(2 / 3 * M.Udc * SU, k * Math.PI / 3); return f1(p[0]) + " " + f1(-p[1]); }).join(" L") + " Z" });
+  arrow(sp, "i", 1, 0.9).set(-172, 0, 176, 0); arrow(sp, "i", 1, 0.9).set(0, -172, 0, 176);
+  el(sp, "text", { x: 170, y: 16, "text-anchor": "end" }, "α"); el(sp, "text", { x: 8, y: -166 }, "β");
+  const spDq = el(sp, "g");
+  el(spDq, "line", { class: "axis dash", x1: 0, y1: 0, x2: 150, y2: 0 }); el(spDq, "line", { class: "axis dash", x1: 0, y1: 0, x2: 0, y2: -150 });
+  arrow(spDq, "i", 1, 0.8).set(148, 0, 160, 0); arrow(spDq, "i", 1, 0.8).set(0, 148, 0, 160);
+  const spD = el(sp, "text", { "text-anchor": "middle" }, "d"), spQ = el(sp, "text", { "text-anchor": "middle" }, "q");
+  const spArc = el(sp, "path", { class: "thin" }), spArcLab = mtext(sp, 0, 0, "ϑ_m", { class: "tick" });
+  const spU = arrow(sp, "i", 2.4, 1.2), spI = arrow(sp, "w", 2.4, 1.2);
+  const spUl = mtext(sp, 0, 0, "#u#_s^s"), spIl = mtext(sp, 0, 0, "#i#_s^s", { class: "fw" });
+
+  // ---- roottorikoordinaatisto ----
+  const rp = $("rp");
+  // Virta ja rajat (kuva 14.5): origo kohdassa OX, mittakaava SI
+  const OX = 55, gLim = el(rp, "g");
+  {
+    const defs = el(gLim, "defs");
+    el(el(defs, "clipPath", { id: "cpBox" }), "rect", { x: -185, y: -185, width: 370, height: 370 });
+    el(el(defs, "clipPath", { id: "cpLeft" }), "rect", { x: -185, y: -185, width: 185 + OX, height: 370 });
+  }
+  const cpV = el(el(el(gLim, "defs"), "clipPath", { id: "cpVolt" }), "circle", {});
+  el(el(gLim, "g", { "clip-path": "url(#cpLeft)" }), "circle", { class: "lin", cx: OX, cy: 0, r: M.imax * SI, "clip-path": "url(#cpVolt)" });
+  el(gLim, "circle", { class: "sw dash", fill: "none", "stroke-width": 1.3, cx: OX, cy: 0, r: M.imax * SI });
+  const vLim = el(el(gLim, "g", { "clip-path": "url(#cpBox)" }), "circle", { class: "sr dash", fill: "none", "stroke-width": 1.3 });
+  arrow(gLim, "i", 1, 0.9).set(-178, 0, 180, 0); arrow(gLim, "i", 1, 0.9).set(OX, -160, OX, 178);
+  mtext(gLim, 164, -17, "i_d"); mtext(gLim, OX + 8, 166, "i_q");
+  el(gLim, "text", { class: "tick", x: OX, y: 177, "text-anchor": "middle" }, "MTPA");
+  for (const v of [-15, 15]) el(gLim, "text", { class: "tick", x: OX + 6, y: -v * SI + (v > 0 ? -5 : 14) }, v < 0 ? "−15 A" : "15 A");
+  el(gLim, "text", { class: "tick", x: OX - M.imax * SI - 4, y: 14, "text-anchor": "end" }, "−15 A");
+  const trail = el(gLim, "path", { class: "curve sw", "stroke-width": 1, opacity: 0.55 });
+  const limI = arrow(gLim, "w", 2.4, 1.2), limRef = el(gLim, "circle", { class: "refdot", r: 5 });
+  // Vektoridiagrammi (kuva 14.4): origo kohdassa (VX, 0), mittakaavat SP (käämivuo), SI2 (virta) ja SU2 (jännite)
+  const VX = -75, SP = 110 / M.psif, SI2 = 6, SU2 = 0.36, gVec = el(rp, "g", { hidden: "" });
+  arrow(gVec, "i", 1, 0.9).set(-150, 0, 178, 0); arrow(gVec, "i", 1, 0.9).set(VX, -160, VX, 178);
+  el(gVec, "text", { x: 172, y: 17, "text-anchor": "end" }, "d"); el(gVec, "text", { x: VX + 8, y: -166 }, "q");
+  const vPf = arrow(gVec, "r", 2, 1.1), vLi = arrow(gVec, "r", 2, 1), vPs = arrow(gVec, "r", 2, 1.1), vU = arrow(gVec, "i", 2.4, 1.2), vI = arrow(gVec, "w", 2.4, 1.2);
+  vPf.set(VX, 0, VX + M.psif * SP, 0);
+  mtext(gVec, VX + M.psif * SP - 26, -18, "ψ_f", { class: "fr" });
+  const vLil = mtext(gVec, 0, 0, "L_s#i#_s", { class: "fr" }), vPsl = mtext(gVec, 0, 0, "#ψ#_s", { class: "fr" }), vUl = mtext(gVec, 0, 0, "#u#_s"), vIl = mtext(gVec, 0, 0, "#i#_s", { class: "fw" });
+  const RP_NOTE = {
+    lim: 'Varjostettu alue on käyttökelpoinen toiminta-alue. Jänniteraja |<span class="m"><b>u</b></span><sub>s</sub>| = <span class="m">u</span><sub>max</sub> = <span class="m">U</span><sub>dc</sub>/√3 on piirretty pysyvässä tilassa nykyisellä nopeudella. Ilman resistanssia se on yhtälön (14.13) ympyrä, jonka keskipiste on kohdassa <span class="m">i</span><sub>d</sub> = −<span class="m">ψ</span><sub>f</sub>/<span class="m">L</span><sub>s</sub> ≈ −64 A. Vrt. kuva 14.5.',
+    vec: 'Staattorin käämivuo on <span class="m"><b>ψ</b></span><sub>s</sub> = <span class="m">L</span><sub>s</sub><span class="m"><b>i</b></span><sub>s</sub> + <span class="m">ψ</span><sub>f</sub>. Suurilla nopeuksilla pysyvässä tilassa on <span class="m"><b>u</b></span><sub>s</sub> ≈ j<span class="m">ω</span><sub>m</sub><span class="m"><b>ψ</b></span><sub>s</sub>, yhtälö (14.11). Käämivuolla, virralla ja jännitteellä on eri mittakaavat. Vrt. kuva 14.4.',
+  };
+  function setView(v) {
+    view = v;
+    document.querySelectorAll("[data-view]").forEach(b => b.setAttribute("aria-pressed", b.dataset.view === v));
+    gLim.toggleAttribute("hidden", v !== "lim"); gVec.toggleAttribute("hidden", v !== "vec");
+    $("lgLim").toggleAttribute("hidden", v !== "lim"); $("lgVec").toggleAttribute("hidden", v !== "vec");
+    $("rpNote").innerHTML = RP_NOTE[v];
+  }
+
+  // ---- aikakäyrät ----
+  // Käyrät piirretään canvas-elementtiin ja akselit sen päälle SVG-kuvana. Kuvan leveys seuraa sivun leveyttä.
+  let COL = {};
+  const readColors = () => { COL = { ink: css("--ink"), wave: css("--wave"), a: css("--pa"), b: css("--pb"), c: css("--pc") }; };
+  function mkPlot(id, o) {
+    const box = $(id), cv = box.querySelector("canvas"), svg = box.querySelector("svg"), ctx = cv.getContext("2d");
+    const L = 46, R = 46, T = 18, Bm = 20;
+    let W = 380, Hh = 128, ymax = 0, dpr = 1;
+    const gt = el(svg, "g"), gs = el(svg, "g");
+    const ticks = [0, 1, 2, 3, 4, 5, 6, 7].map(() => ({ ln: el(gt, "line", { class: "grid" }), tx: el(gt, "text", { class: "tick", "text-anchor": "middle" }) }));
+    const Xp = (tt, t0) => L + (tt - t0) / WIN * (W - L - R), Yp = v => T + (ymax - v) / (2 * ymax) * (Hh - T - Bm);
+    function layout() {
+      const r = box.getBoundingClientRect(); W = Math.max(240, Math.round(r.width) || 380); Hh = Math.round(r.height) || 128; dpr = window.devicePixelRatio || 1;
+      cv.width = Math.round(W * dpr); cv.height = Math.round(Hh * dpr); svg.setAttribute("viewBox", `0 0 ${W} ${Hh}`); ymax = 0;
+    }
+    function axes(ym) {
+      ymax = ym; gs.textContent = "";
+      arrow(gs, "i", 1, 0.75).set(L, -(Hh - Bm), L, -(T - 12));
+      arrow(gs, "i", 1, 0.75).set(L, -Yp(0), W - R + 12, -Yp(0));
+      for (const v of o.ticks(ym)) { el(gs, "line", { class: "axis", x1: L - 3, x2: L, y1: Yp(v), y2: Yp(v) }); el(gs, "text", { class: "tick", x: L - 6, y: Yp(v) + 4, "text-anchor": "end" }, fmt(v, 0)); }
+      mtext(gs, L + 8, -(T - 5), o.name);
+      mtext(gs, W - R + 16, -(Yp(0) + 4), "t\\ (s)\\");
+    }
+    function draw(t0, ym, curves) {
+      if (ym !== ymax) axes(ym);
+      const nvis = Math.min(count, Math.ceil(WIN / (REC * H)) + 2), k0 = count - nvis, stride = Math.max(1, Math.floor(nvis / 2000));   // ikkunassa näkyvät näytteet
+      const dt = WIN / 6 > 0.05 ? 0.1 : WIN / 6 > 0.01 ? 0.02 : 0.005, dec = dt >= 0.1 ? 1 : dt >= 0.02 ? 2 : 3, first = Math.ceil(t0 / dt - 1e-6);
+      ticks.forEach((tk, k) => {
+        const tt = (first + k) * dt, vis = tt <= t0 + WIN + 1e-6, xx = f1(Xp(tt, t0));
+        tk.ln.toggleAttribute("hidden", !vis); tk.tx.toggleAttribute("hidden", !vis);
+        if (vis) { tk.ln.setAttribute("x1", xx); tk.ln.setAttribute("x2", xx); tk.ln.setAttribute("y1", T); tk.ln.setAttribute("y2", Hh - Bm); tk.tx.setAttribute("x", xx); tk.tx.setAttribute("y", Hh - 5); tk.tx.textContent = fmt(tt, dec); }
+      });
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, Hh);
+      ctx.save(); ctx.beginPath(); ctx.rect(L, T - 3, W - L - R + 1, Hh - T - Bm + 6); ctx.clip(); ctx.lineJoin = "round";
+      for (const c of curves) {
+        ctx.beginPath(); ctx.strokeStyle = c.color; ctx.lineWidth = c.w || 1.6; ctx.setLineDash(c.dash || []);
+        for (let k = k0; k < count; k += stride) { const j = at(k), px = Xp(B.t[j], t0), py = Yp(c.arr[j]); if (k > k0) ctx.lineTo(px, py); else ctx.moveTo(px, py); }
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+    return { layout, draw };
+  }
+  const WLIM = [[60, 50], [130, 100], [260, 200], [350, 300]];            // nopeusakselin raja ja asteikkomerkki (rad/s)
+  const pw = mkPlot("pw", { name: "ω_M\\ (rad/s)\\", ticks: ym => { const tk = WLIM.find(l => l[0] === ym)[1]; return [-tk, tk]; } });
+  const pi = mkPlot("pi", { name: "i_d\\, \\i_q\\ (A)\\", ticks: () => [-15, 15] });
+  const pabc = mkPlot("pabc", { name: "i_a\\, \\i_b\\, \\i_c\\ (A)\\", ticks: () => [-15, 15] });
+
+  // ---- piirto ----
+  function draw() {
+    const id = X[0], iq = X[1], wM = X[2], wm = M.np * wM, th = M.np * X[3], c = Math.cos(th), s = Math.sin(th);
+    const tau = 1.5 * M.np * M.psif * iq, thd = ((th % TAU) + TAU) % TAU;
+    // signaalit
+    $("vWr").textContent = fmt(TAU * U.n); $("vW").textContent = fmt(wM);
+    $("vTr").textContent = fmt(S.tauRef); $("vT").textContent = fmt(tau);
+    $("vIdr").textContent = fmt(S.idr); $("vId").textContent = fmt(id);
+    $("vIqr").textContent = fmt(S.iqr); $("vIq").textContent = fmt(iq);
+    $("vUr").textContent = fmt(Math.hypot(S.udr, S.uqr), 0); $("vU").textContent = fmt(Math.hypot(S.ud, S.uq), 0);
+    $("vTh").textContent = fmt(thd * 360 / TAU, 0) + "°";
+    $("vF").textContent = fmt(Math.abs(wm) / TAU) + " Hz";
+    $("vP").textContent = fmt(tau * wM, 0) + " W";
+    $("vTime").textContent = fmt(t, 3);
+    // staattorikoordinaatisto
+    const ua = (S.ud * c - S.uq * s) * SU, ub = (S.ud * s + S.uq * c) * SU, ia = (id * c - iq * s) * SI, ib = (id * s + iq * c) * SI;
+    spDq.setAttribute("transform", `rotate(${f1(-thd * 360 / TAU)})`);
+    const pd = pol(168, thd + 0.07), pq = pol(168, thd + Math.PI / 2 + 0.07);
+    place(spD, pd[0], pd[1] - 5); place(spQ, pq[0], pq[1] - 5);
+    const pe = pol(30, thd); spArc.setAttribute("d", `M30 0 A30 30 0 ${thd > Math.PI ? 1 : 0} 0 ${f1(pe[0])} ${f1(-pe[1])}`);
+    const pl = pol(43, thd / 2); place(spArcLab, pl[0] - 8, pl[1] - 4);
+    spU.set(0, 0, ua, ub); spI.set(0, 0, ia, ib);
+    // vektorin nimi kärjen jatkeelle, hieman sivuun siirrettynä
+    const tip = (tx, ox, vx, vy, off) => {
+      const n = Math.hypot(vx, vy); tx.toggleAttribute("hidden", n < 3); if (n < 3) return;
+      const ux = vx / n, uy = vy / n, r = Math.max(n, 24) + 13;
+      tx.setAttribute("text-anchor", ux < -0.4 ? "end" : ux > 0.4 ? "start" : "middle"); place(tx, ox + ux * r - uy * off, uy * r + ux * off - 5);
+    };
+    tip(spUl, 0, ua, ub, -10); tip(spIl, 0, ia, ib, 10);
+    // roottorikoordinaatisto
+    if (view === "lim") {
+      // jänniteraja pysyvässä tilassa: |(R_s + jω_m L_s) i_s + jω_m ψ_f| = u_max on ympyrä
+      const z2 = M.Rs * M.Rs + wm * wm * M.Ls * M.Ls, ccx = -wm * wm * M.Ls * M.psif / z2, ccy = -wm * M.Rs * M.psif / z2, rr = umax / Math.sqrt(z2);
+      for (const e of [vLim, cpV]) { e.setAttribute("cx", f1(OX + ccx * SI)); e.setAttribute("cy", f1(-ccy * SI)); e.setAttribute("r", f1(rr * SI)); }
+      limI.set(OX, 0, OX + id * SI, iq * SI);
+      limRef.setAttribute("cx", f1(OX + S.idr * SI)); limRef.setAttribute("cy", f1(-S.iqr * SI));
+      let d = ""; const n0 = Math.max(0, count - 1500);       // virran rata viimeisen 150 ms:n ajalta
+      for (let k = n0; k < count; k += 3) { const j = at(k); d += (k > n0 ? "L" : "M") + f1(OX + B.id[j] * SI) + " " + f1(-B.iq[j] * SI); }
+      trail.setAttribute("d", d);
+    } else {
+      const fx = VX + M.psif * SP, lx = M.Ls * id * SP, ly = M.Ls * iq * SP;
+      vLi.set(fx, 0, fx + lx, ly); vPs.set(VX, 0, fx + lx, ly);
+      vI.set(VX, 0, VX + id * SI2, iq * SI2); vU.set(VX, 0, VX + S.ud * SU2, S.uq * SU2);
+      vLil.toggleAttribute("hidden", Math.hypot(lx, ly) < 3); place(vLil, fx + Math.max(lx, 0) + 8, ly / 2 - 4);
+      place(vPsl, VX + (fx + lx - VX) * 0.5 - 8, ly * 0.5 + (ly >= 0 ? 10 : -20));
+      tip(vIl, VX, id * SI2, iq * SI2, -12); tip(vUl, VX, S.ud * SU2, S.uq * SU2, 12);
+    }
+    // käyrät
+    const t0 = Math.max(0, t - WIN); let wmax = 0;
+    for (let k = Math.max(0, count - Math.ceil(WIN / (REC * H)) - 2); k < count; k += 3) { const j = at(k); wmax = Math.max(wmax, Math.abs(B.w[j]), Math.abs(B.wr[j])); }
+    const ym = (WLIM.find(l => l[0] >= 1.06 * wmax) || WLIM[WLIM.length - 1])[0];
+    pw.draw(t0, ym, [{ arr: B.wr, color: COL.ink, w: 1.2, dash: [5, 4] }, { arr: B.w, color: COL.wave }]);
+    pi.draw(t0, 18, [{ arr: B.id, color: COL.wave }, { arr: B.iq, color: COL.a }]);
+    pabc.draw(t0, 18, [{ arr: B.ia, color: COL.a }, { arr: B.ib, color: COL.b }, { arr: B.ic, color: COL.c }]);
+  }
+
+  // ---- säätimet ----
+  $("n").addEventListener("input", () => { scn = null; setN(+$("n").value); if (!playing) draw(); });
+  $("tau").addEventListener("input", () => { scn = null; setTau(+$("tau").value); if (!playing) draw(); });
+  $("fw").addEventListener("change", () => { U.fw = $("fw").checked; if (!U.fw) X[7] = 0; });
+  $("play").addEventListener("click", () => setPlay(!playing));
+  $("reset").addEventListener("click", () => { reset(); draw(); });
+  $("fig").addEventListener("click", () => { reset(); scn = { i: 0 }; setPlay(true); });
+  const pressS = () => document.querySelectorAll("[data-speed]").forEach(b => b.setAttribute("aria-pressed", b.dataset.speed === speed));
+  document.querySelectorAll("[data-speed]").forEach(b => b.addEventListener("click", () => { speed = b.dataset.speed; pressS(); }));
+  document.querySelectorAll("[data-view]").forEach(b => b.addEventListener("click", () => { setView(b.dataset.view); draw(); }));
+  const pressW = () => document.querySelectorAll("[data-win]").forEach(b => b.setAttribute("aria-pressed", +b.dataset.win === WIN));
+  document.querySelectorAll("[data-win]").forEach(b => b.addEventListener("click", () => { WIN = +b.dataset.win; pressW(); draw(); }));
+
+  // Alkutila osoitteesta, esim. vektorisaato.html#run=fig&t=0.45 (aja kuvan 14.6 esimerkkiä 0,45 s ja pysäytä)
+  // tai #n=48&tau=10&fw=1&view=vec&t=1 (aja annetuilla ohjearvoilla 1 s ja pysäytä). Ilman parametreja käynnistyy kuvan 14.6 esimerkki.
+  reset();
+  const hp = new URLSearchParams(location.hash.slice(1));
+  if (hp.get("run") === "fig" || !hp.toString()) scn = { i: 0 };
+  if (hp.has("n")) setN(Math.max(-50, Math.min(50, +hp.get("n"))));
+  if (hp.has("tau")) setTau(Math.max(-15, Math.min(15, +hp.get("tau"))));
+  if (hp.get("fw") === "0") { U.fw = false; $("fw").checked = false; }
+  if (hp.get("view") === "vec") view = "vec";
+  if (["slow", "norm", "fast"].includes(hp.get("speed"))) speed = hp.get("speed");
+  if ([0.6, 0.1, 0.02].includes(+hp.get("win"))) WIN = +hp.get("win");
+  if (hp.has("t")) { playing = true; advance(Math.min(5, Math.max(0, +hp.get("t")))); playing = false; }
+
+  function layoutAll() { readColors(); for (const p of [pw, pi, pabc]) p.layout(); draw(); }
+  function frame(now) {
+    const dt = Math.min((now - last) / 1000, 0.05); last = now;
+    if (playing) { advance(RATE[speed] * dt); draw(); }
+    requestAnimationFrame(frame);
+  }
+  pressS(); pressW(); setView(view); $("play").textContent = playing ? "Pysäytä" : "Jatka";
+  layoutAll();
+  new ResizeObserver(layoutAll).observe($("pw"));
+  window.matchMedia("(prefers-color-scheme: dark)").addEventListener?.("change", layoutAll);
+  new MutationObserver(layoutAll).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

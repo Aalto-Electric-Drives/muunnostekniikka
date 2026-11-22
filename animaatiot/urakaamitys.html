@@ -1,0 +1,547 @@
+<!doctype html>
+<html lang="fi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Urakäämitys</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=STIX+Two+Text:ital,wght@0,400;0,600;1,400;1,700&display=swap">
+<style>
+/* Asettelu: 3D-kuva ja poikkileikkaus rinnakkain (kapealla allekkain), levityskuva, säätimet ja tehtävät alla. Värit kirjan kuvista. */
+:root {
+  --paper: #fbfbf8;
+  --panel: #f2f3ef;
+  --ink: #1d2128;
+  --muted: #5d6470;
+  --rule: #d9dbd4;
+  --iron: #e6e6e3;      /* kirjan harmaa rautaosille */
+  --magnet: #bfbfbf;
+  --pa: #d0242b;        /* a-vaihe, kirjan punainen */
+  --pb: #17803a;        /* b-vaihe, kirjan vihreä */
+  --pc: #1f3fc4;        /* c-vaihe, kirjan sininen */
+  --wave: #1f3fc4;
+  --accent: #1f3fc4;
+  --font-body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --font-math: "STIX Two Text", "Times New Roman", Times, serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #15181d; --panel: #1d2128; --ink: #e8eaee; --muted: #9aa2ad; --rule: #333944;
+    --iron: #2b3038; --magnet: #59606c; --pa: #ff6b6b; --pb: #5fce80; --pc: #7f9bff; --wave: #7f9bff; --accent: #7f9bff;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #15181d; --panel: #1d2128; --ink: #e8eaee; --muted: #9aa2ad; --rule: #333944;
+  --iron: #2b3038; --magnet: #59606c; --pa: #ff6b6b; --pb: #5fce80; --pc: #7f9bff; --wave: #7f9bff; --accent: #7f9bff;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { margin: 0; }
+body {
+  background: var(--paper); color: var(--ink);
+  font: 15px/1.5 var(--font-body);
+  padding-inline: 16px; padding-block: 20px 40px;
+}
+.wrap { max-width: 1240px; margin: 0 auto; display: grid; gap: 20px; }
+header h1 { font: 600 1.7rem/1.2 var(--font-math); margin: 0 0 4px; text-wrap: balance; }
+header p { margin: 0; color: var(--muted); max-width: 78ch; }
+.m { font-family: var(--font-math); font-style: italic; }
+.m sub, .m sup { font-style: normal; font-size: .72em; }
+.m b { font-weight: 700; }
+.m .up { font-style: normal; }
+.ss { display: inline-flex; flex-direction: column; vertical-align: middle; line-height: .95; font-size: .72em; font-style: normal; margin-left: .05em; }
+.main { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; align-items: start; }
+@media (max-width: 1040px) { .main { grid-template-columns: repeat(2, minmax(0, 1fr)); } .main .plots { grid-column: 1 / -1; } }
+@media (max-width: 640px) { .main { grid-template-columns: minmax(0, 1fr); } }
+.card { background: var(--panel); border: 1px solid var(--rule); border-radius: 6px; padding: 14px; min-width: 0; }
+.card h2 { font: 600 .78rem/1.2 var(--font-body); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 0 0 10px; }
+.card h2 + .seg { margin-bottom: 6px; }
+svg.fig { width: 100%; height: auto; display: block; max-width: 440px; margin-inline: auto; }
+svg.plot { width: 100%; height: auto; display: block; }
+svg text { fill: var(--ink); font-family: var(--font-math); font-size: 14px; }
+svg .it { font-style: italic; }
+svg .b { font-weight: 700; }
+svg .small { font-size: 10px; font-style: normal; font-weight: 400; }
+svg .tick { font-size: 12px; fill: var(--muted); }
+.iron { fill: var(--iron); stroke: var(--ink); stroke-width: 1.2; }
+.gap { fill: var(--paper); stroke: var(--ink); stroke-width: 1.2; }
+.magnet { fill: var(--magnet); stroke: var(--ink); stroke-width: 1; }
+.thin { fill: none; stroke: var(--muted); stroke-width: 1; }
+.axis { fill: none; stroke: var(--ink); stroke-width: 1; }
+.dash { stroke-dasharray: 5 4; }
+.grid { stroke: var(--rule); stroke-width: 1; fill: none; }
+.sa { stroke: var(--pa); } .sb { stroke: var(--pb); } .sc { stroke: var(--pc); } .si { stroke: var(--ink); } .sm { stroke: var(--muted); }
+.fa { fill: var(--pa); } .fb { fill: var(--pb); } .fc { fill: var(--pc); } .fi { fill: var(--ink); } .fm { fill: var(--muted); }
+svg text.fa { fill: var(--pa); } svg text.fb { fill: var(--pb); } svg text.fc { fill: var(--pc); }
+.curve { fill: none; stroke-width: 1.8; stroke-linejoin: round; }
+.sym { fill: var(--paper); stroke: var(--wave); stroke-width: 1.1; }
+.symx { stroke: var(--wave); stroke-width: 1.1; fill: none; }
+.symd { fill: var(--wave); }
+.seg { display: inline-flex; border: 1px solid var(--rule); border-radius: 6px; overflow: hidden; flex-wrap: wrap; }
+.seg button { border: 0; background: var(--paper); color: var(--ink); font: inherit; font-size: .88rem; padding: 5px 10px; cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--wave); color: var(--paper); }
+.seg button + button { border-left: 1px solid var(--rule); }
+button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+table.vals { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; font-size: .92rem; margin-top: 10px; }
+table.vals th, table.vals td { padding: 3px 6px; border-bottom: 1px solid var(--rule); text-align: right; white-space: nowrap; }
+table.vals th { font-weight: 400; text-align: left; white-space: normal; }
+.note { color: var(--muted); font-size: .85rem; margin: 8px 0 0; }
+.legend { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: .85rem; color: var(--muted); margin: 4px 0 0; }
+.legend i { display: inline-block; width: 18px; height: 0; border-top: 2px solid; vertical-align: middle; margin-right: 5px; }
+.controls { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 14px 24px; margin-top: 14px; }
+.ctl label { display: flex; justify-content: space-between; gap: 8px; font-size: .92rem; }
+.ctl output { font-variant-numeric: tabular-nums; font-weight: 600; }
+.ctl input[type=range] { width: 100%; accent-color: var(--wave); }
+.bar { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; }
+.bar + .bar { margin-top: 12px; }
+.btn { border: 1px solid var(--wave); background: var(--wave); color: var(--paper); font: 500 .9rem var(--font-body); padding: 6px 14px; border-radius: 6px; cursor: pointer; }
+.btn.ghost { background: transparent; color: var(--wave); }
+.btn:disabled { opacity: .45; cursor: default; }
+.check { display: inline-flex; gap: 6px; align-items: center; font-size: .9rem; }
+.tasks ol { margin: 0; padding-left: 1.3em; display: grid; gap: 10px; }
+.tasks li { max-width: 80ch; }
+.tasks details { margin-top: 3px; }
+.tasks summary { cursor: pointer; color: var(--wave); font-size: .88rem; }
+.tasks details p { margin: 4px 0 0; color: var(--muted); }
+footer { color: var(--muted); font-size: .82rem; }
+
+.main2 { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: 20px; align-items: start; }
+@media (max-width: 860px) { .main2 { grid-template-columns: minmax(0, 1fr); } }
+canvas#view3d { width: 100%; height: 470px; display: block; touch-action: none; cursor: grab; }
+canvas#view3d:active { cursor: grabbing; }
+.slot { fill: var(--paper); stroke: var(--ink); stroke-width: 1; }
+.cond { fill: var(--paper); stroke: var(--rule); stroke-width: 1; }
+.num { font-family: var(--font-body); font-size: 9px; fill: var(--muted); }
+.ctlrow { display: flex; flex-wrap: wrap; gap: 10px 22px; align-items: center; }
+.ctlrow > span.lab { font-size: .9rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>Urakäämitys: vyyhdet ja vyyhdenpäät</h1>
+  <p>Kirjan luku 11 ja luento 11. Kirjan kuvan 11.4(a) käämitys rakennetaan tässä vyyhti kerrallaan. Jokaisen vyyhden toinen sivu on uran ilmavälin puoleisessa kerroksessa ja toinen sivu toisen uran pohjalla. Vyyhdenpäät yhdistävät sivut koneen päissä. Muuta napaparilukua ja katso, miten vyyhdet lyhenevät ja kuvio toistuu.</p>
+</header>
+
+<div class="main2">
+  <section class="card" aria-labelledby="h-3d">
+    <h2 id="h-3d">Staattori ja vyyhdet</h2>
+    <canvas id="view3d" aria-label="Kolmiulotteinen kuva staattorista ja vyyhdeistä. Käännä kuvaa vetämällä."></canvas>
+    <div class="bar">
+      <span class="seg" role="group" aria-label="Katselusuunta">
+        <button type="button" data-cam="front">Edestä</button>
+        <button type="button" data-cam="obl">Viistosti</button>
+        <button type="button" data-cam="back">Takaa</button>
+      </span>
+      <span class="note" style="margin:0">Käännä kuvaa vetämällä.</span>
+    </div>
+  </section>
+
+  <section class="card" aria-labelledby="h-cs">
+    <h2 id="h-cs">Poikkileikkaus edestä</h2>
+    <svg id="cs" class="fig" viewBox="-185 -185 370 370" role="img" aria-label="Staattorin poikkileikkaus: urat ja vyyhtien sivut"></svg>
+    <p class="note">Piste: virran positiivinen suunta on katsojaan päin. Risti: poispäin. Korostettu kaari on viimeksi lisätyn vyyhden vyyhdenpää etupäädyssä. Vrt. kuvat 11.4(a) ja 11.6.</p>
+    <div class="legend"><span><i style="border-color:var(--pa)"></i>a</span><span><i style="border-color:var(--pb)"></i>b</span><span><i style="border-color:var(--pc)"></i>c</span></div>
+  </section>
+</div>
+
+<section class="card" aria-labelledby="h-dev">
+  <h2 id="h-dev">Käämitys tasoon levitettynä</h2>
+  <svg id="dev" class="plot" viewBox="0 0 1000 302" role="img" aria-label="Käämitys tasoon levitettynä: vyyhdet, niiden sarjakytkentä ja liittimet"></svg>
+  <p class="note">Urat on numeroitu positiiviseen kiertosuuntaan. Yhtenäinen viiva: sivu ilmavälin puolella. Katkoviiva: sivu uran pohjalla. Ylhäällä on poikkileikkauskuvan katsojan puoleinen etupääty. Alhaalla on takapääty, jossa ovat kytkennät ja liittimet. Nuoli näyttää virran positiivisen suunnan. Vyyhden kaksi johdinta lähtevät takapäädyn vyyhdenpään kärjestä. Reunan yli jatkuva vyyhti tulee näkyviin vastakkaisesta reunasta.</p>
+</section>
+
+<section class="card" aria-labelledby="h-ctl">
+  <h2 id="h-ctl">Säätimet</h2>
+  <div class="ctlrow">
+    <span class="lab">Napapariluku <span class="m">n</span><sub>p</sub></span>
+    <span class="seg" role="group" aria-label="Napapariluku">
+      <button type="button" data-p="1">1</button><button type="button" data-p="2">2</button><button type="button" data-p="3">3</button>
+    </span>
+    <span class="lab">Uria napaa ja vaihetta kohti</span>
+    <span class="seg" role="group" aria-label="Uria napaa ja vaihetta kohti">
+      <button type="button" data-q="1">1</button><button type="button" data-q="2">2</button><button type="button" data-q="3">3</button>
+    </span>
+    <span class="lab">Vyyhden leveys</span>
+    <span class="seg" role="group" aria-label="Vyyhden leveys">
+      <button type="button" data-sh="0">Napajako</button><button type="button" data-sh="1">1 ura lyhyempi</button><button type="button" data-sh="2">2 uraa lyhyempi</button>
+    </span>
+  </div>
+  <div class="bar" style="margin-top:14px">
+    <button type="button" class="btn ghost" id="prev">Edellinen</button>
+    <button type="button" class="btn" id="next">Seuraava vyyhti</button>
+    <button type="button" class="btn ghost" id="auto">Toista</button>
+    <button type="button" class="btn ghost" id="all">Kaikki</button>
+    <label class="check"><input type="checkbox" id="pha" checked> a</label>
+    <label class="check"><input type="checkbox" id="phb" checked> b</label>
+    <label class="check"><input type="checkbox" id="phc" checked> c</label>
+    <label class="check"><input type="checkbox" id="conn" checked> Näytä kytkennät</label>
+  </div>
+  <p class="note" id="status"></p>
+  <table class="vals" aria-label="Käämityksen tunnusluvut" style="max-width:560px">
+    <tbody>
+      <tr><th>Urien ja vyyhtien määrä</th><td id="tQ"></td></tr>
+      <tr><th>Napajako</th><td id="tTau"></td></tr>
+      <tr><th>Vyyhden leveys</th><td id="tY"></td></tr>
+      <tr><th>Vyyhtiryhmiä vaihetta kohti</th><td id="tG"></td></tr>
+      <tr><th>Pyörimisnopeus taajuudella 50 Hz</th><td id="tN"></td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section class="card tasks" aria-labelledby="h-tasks">
+  <h2 id="h-tasks">Kokeile itse</h2>
+  <ol>
+    <li>Aloita kirjan käämityksestä (<span class="m">n</span><sub>p</sub> = 1, kaksi uraa napaa ja vaihetta kohti, vyyhti yhden uran napajakoa lyhyempi). Lisää a-vaiheen vyyhdet yksi kerrallaan. Montako vyyhteä vaiheessa on, ja mihin uriin ne tulevat?
+      <details><summary>Vastaus</summary><p>Vaiheessa on neljä vyyhteä kahdessa kahden vyyhden ryhmässä. Napajako on kuusi uraa, mutta vyyhden leveys on viisi uraa, eli käämi on jänteistetty. Siksi a-vaiheen sivut jakautuvat kolmeen vierekkäiseen uraan kummankin navan kohdalla: keskimmäisessä urassa on kaksi a-vaiheen sivua ja reunimmaisissa yksi. Reunimmaiset urat jaetaan viereisen vaiheen kanssa, kuten kuvassa 11.4(a).</p></details></li>
+    <li>Katso valmista a-vaihetta takaa ja levityskuvasta. Miten vyyhdet ja kaksi vyyhtiryhmää on kytketty toisiinsa? Miksi?
+      <details><summary>Vastaus</summary><p>Ryhmän vyyhdet ovat sarjassa niin, että virta kiertää niissä samaan suuntaan. Ryhmät ovat sarjassa niin, että virta kiertää niissä vastakkaisiin suuntiin. Ryhmät ovat vastakkaisten napojen kohdalla. Kun kiertosuunnat ovat vastakkaiset, molemmat ryhmät magnetoivat konetta a-vaiheen magneettiakselin suuntaan ja magneettien niihin indusoimat jännitteet summautuvat.</p></details></li>
+    <li>Vaihda napapariluvuksi 2. Miten vyyhden leveys, vyyhdenpäiden pituus ja ryhmien määrä muuttuvat?
+      <details><summary>Vastaus</summary><p>Sama kuvio toistuu kehällä kaksi kertaa. Napajako on mekaanisena kulmana 90° eikä 180°, joten vyyhdet ja vyyhdenpäät lyhenevät. Vaiheessa on neljä ryhmää, yksi jokaista napaa kohti. Sähkökulmina mitattuna käämitys on sama kuin ennen, minkä vuoksi malli pysyy samana, kun käytetään sähkökulmaa <span class="m">ϑ</span><sub>m</sub> = <span class="m">n</span><sub>p</sub><span class="m">ϑ</span><sub>M</sub>.</p></details></li>
+    <li>Valitse yksi ura napaa ja vaihetta kohti ja vyyhden leveydeksi napajako. Vertaa poikkileikkausta kuvan 11.6 koneisiin.
+      <details><summary>Vastaus</summary><p>Jokaisen navan kohdalla on yksi halkaisijavyyhti vaihetta kohti, ja saman uran molemmissa kerroksissa on sama vaihe. Poikkileikkaus vastaa kuvan 11.6 yksinkertaistettua esitystä, jossa kustakin vyyhdestä on piirretty yksi sivu uraa kohti.</p></details></li>
+    <li>Piilota vaiheet b ja c ja vertaa a-vaiheen sivujen paikkoja poikkileikkauksessa eri vyyhden leveyksillä. Mihin a-vaiheen magneettiakseli osoittaa?
+      <details><summary>Vastaus</summary><p>Akseli osoittaa aina oikealle (ja moninapaisessa koneessa myös kulmiin, jotka ovat tästä napaparin välein). Pisteellä merkityt sivut ovat symmetrisesti akselista 90 sähköastetta positiiviseen suuntaan ja ristillä merkityt 90 sähköastetta negatiiviseen suuntaan. Jänteistys levittää sivuja useampaan uraan, mutta ei siirrä akselia.</p></details></li>
+  </ol>
+</section>
+
+<footer>ELEC-C8003 Sähköenergian muunnostekniikka. Käämitys on kaksikerroksinen, ja vaiheen kaikki vyyhdet on kytketty sarjaan. Jokaisessa vyyhdessä on käytännössä useita sarjaan kytkettyjä kierroksia, mutta vyyhti on piirretty yhtenä kierroksena, jotta sarjakytkentää on helppo seurata. Vyyhdenpäiden muoto on periaatteellinen. Kuvanumerot viittaavat kurssikirjan versioon 11/2026.</footer>
+</div>
+
+<script>
+(() => {
+  "use strict";
+  const $ = id => document.getElementById(id);
+  const NS = "http://www.w3.org/2000/svg";
+  const TAU = 2 * Math.PI, DEG = Math.PI / 180;
+  const fmt = (x, n = 0) => x.toFixed(n).replace(".", ",").replace("-", "−");
+  const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  const mod = (a, n) => ((a % n) + n) % n;
+  const PH = "abc";
+
+  // ---- käämitys ----
+  // Kaksikerroksinen kolmivaihekäämitys: np napaparia, q uraa napaa ja vaihetta kohti, vyyhden leveys y uraa.
+  // Urat k = 0...Q-1 positiiviseen kiertosuuntaan. Ilmavälin puoleisen kerroksen vyöhykkeet ovat järjestyksessä
+  // a+, c-, b+, a-, c+, b- (+ = virran positiivinen suunta katsojaan päin). Vyyhden toinen sivu on uran k - y pohjalla.
+  // Urien paikat on valittu niin, että a-vaiheen magneettiakseli on kulmassa 0, kuten kirjan kuvissa 11.4 ja 11.6.
+  const BELT = [[0, 1], [2, -1], [1, 1], [0, -1], [2, 1], [1, -1]];
+  function winding(np, q, y) {
+    const Q = 6 * np * q, tau = 3 * q, ge = Math.PI / tau, gm = ge / np;
+    const th0 = (Math.PI / 2 - (tau - y) * ge / 2 - (q - 1) * ge / 2) / np;
+    const angle = k => th0 + k * gm;
+    const coils = [];
+    for (let k = 0; k < Q; k++) {
+      const [ph, s] = BELT[Math.floor(k / q) % 6];
+      coils.push({ k, ph, s, kin: k, kout: mod(k - y, Q), group: Math.floor(k / q) });
+    }
+    const groups = [];
+    for (let g = 0; g < 6 * np; g++) groups.push({ g, ph: BELT[g % 6][0], coils: coils.filter(c => c.group === g) });
+    const phases = [0, 1, 2].map(ph => groups.filter(g => g.ph === ph));
+    return { np, q, y, Q, tau, gm, angle, coils, groups, phases };
+  }
+
+  // ---- tila ----
+  const S = { np: 1, q: 2, sh: 1, n: 0, cam: { yaw: 0.6, pitch: 0.28 }, timer: null };
+  let Wd, order = [];
+  function build() {
+    const tau = 3 * S.q; S.sh = Math.min(S.sh, S.q, tau - 1);
+    Wd = winding(S.np, S.q, tau - S.sh);
+    order = [];
+    for (let ph = 0; ph < 3; ph++) if ($("ph" + PH[ph]).checked) for (const g of Wd.phases[ph]) order.push(...g.coils);
+    S.n = Math.min(S.n, order.length);
+  }
+  const placed = () => order.slice(0, S.n);
+  // Vaiheen vyyhdet ovat sarjassa ryhmä kerrallaan. Kytkentä piirretään, kun sen molemmat vyyhdet ovat paikallaan.
+  function chainLinks(ph) {
+    if (!$("conn").checked) return [];
+    const chain = Wd.phases[ph].flatMap(g => g.coils), on = new Set(placed()), out = [];
+    for (let i = 0; i + 1 < chain.length; i++) if (on.has(chain[i]) && on.has(chain[i + 1])) out.push({ from: chain[i], to: chain[i + 1] });
+    if (on.has(chain[0])) out.push({ coil: chain[0], end: "entry", name: PH[ph] });
+    if (on.has(chain[chain.length - 1])) out.push({ coil: chain[chain.length - 1], end: "exit", name: PH[ph] + "’" });
+    return out;
+  }
+
+  // ---- SVG-apufunktiot ----
+  function el(parent, tag, attrs = {}, text) {
+    const e = document.createElementNS(NS, tag);
+    for (const k in attrs) e.setAttribute(k, attrs[k]);
+    if (text !== undefined) e.textContent = text;
+    parent.appendChild(e); return e;
+  }
+  const pol = (r, a) => [r * Math.cos(a), -r * Math.sin(a)];   // SVG-koordinaatit, kulma positiiviseen kiertosuuntaan
+  function arrowHead(parent, x, y, ang, cls, size = 1) {       // kovera kärki pisteessä (x, y), suunta ang
+    const L = 10 * size, W = 4.2 * size, c = Math.cos(ang), s = -Math.sin(ang);
+    const P = (u, v) => `${(x + u * c - v * s).toFixed(1)} ${(y + u * s + v * c).toFixed(1)}`;
+    return el(parent, "path", { class: cls, d: `M${P(0, 0)} L${P(-L, W)} L${P(-L * 0.75, 0)} L${P(-L, -W)} Z` });
+  }
+
+  // ---- poikkileikkaus ----
+  const RS = 150, RB = 92;
+  function drawSection() {
+    const svg = $("cs"); svg.textContent = "";
+    el(svg, "circle", { r: RS, class: "iron" });
+    el(svg, "circle", { r: RB, class: "gap" });
+    el(svg, "circle", { r: RB - 7, class: "iron" });
+    const { Q, np } = Wd, w = Math.min(15, TAU * (RB + 12) / Q * 0.62), rc = w / 2 - 1.2;
+    const rin = RB + 2 + w / 2, rout = rin + w - 0.6, sideR = [rin, rout];
+    // magneettiakselit
+    for (let ph = 0; ph < 3; ph++) for (let m = 0; m < np; m++) {
+      const a = (ph * TAU / 3 + m * TAU) / np, p0 = pol(RS, a), p1 = pol(RS + 16, a), pl = pol(RS + 26, a);
+      el(svg, "line", { class: "s" + PH[ph], "stroke-width": 1.2, x1: p0[0], y1: p0[1], x2: p1[0], y2: p1[1] });
+      arrowHead(svg, ...pol(RS + 22, a), a, "f" + PH[ph], 0.85);
+      el(svg, "text", { x: pl[0] + 7 * Math.sin(a) , y: pl[1] + 5 + 7 * Math.cos(a), class: "f" + PH[ph], "text-anchor": "middle" }, PH[ph]);
+    }
+    const sides = new Map();       // "k,kerros" -> {ph, s}
+    for (const c of placed()) { sides.set(c.kin + ",0", { ph: c.ph, s: c.s }); sides.set(c.kout + ",1", { ph: c.ph, s: -c.s }); }
+    for (let k = 0; k < Q; k++) {
+      const a = Wd.angle(k), g = el(svg, "g", { transform: `rotate(${-a / DEG})` });
+      el(g, "rect", { class: "slot", x: RB + 1, y: -w / 2, width: 2 * w + 2, height: w });
+      for (let layer = 0; layer < 2; layer++) {
+        const sd = sides.get(k + "," + layer), x = sideR[layer];
+        if (!sd) { el(g, "circle", { class: "cond", cx: x, r: rc }); continue; }
+        const col = "s" + PH[sd.ph];
+        el(g, "circle", { class: col, fill: "var(--paper)", "stroke-width": 1.2, cx: x, r: rc });
+        if (sd.s > 0) el(g, "circle", { class: "f" + PH[sd.ph], cx: x, r: Math.max(1.1, rc * 0.3) });
+        else { const h = rc * 0.707; el(g, "path", { class: col, "stroke-width": 1.1, d: `M${x - h} ${-h} L${x + h} ${h} M${x - h} ${h} L${x + h} ${-h}` }); }
+      }
+      if (Q <= 36 || k % 2 === 0) { const p = pol(RB + 2 * w + 10, a); el(svg, "text", { class: "num", x: p[0], y: p[1] + 3, "text-anchor": "middle" }, k + 1); }
+    }
+    // viimeksi lisätyn vyyhden vyyhdenpää etupäädyssä
+    const last = order[S.n - 1];
+    if (last) {
+      const a1 = Wd.angle(last.kin), a2 = a1 - Wd.y * Wd.gm; let d = "";
+      for (let i = 0; i <= 40; i++) {
+        const u = i / 40, v = Math.min(1, Math.max(0, (u - 0.42) / 0.16)), r = rin + (rout - rin) * v * v * (3 - 2 * v);
+        const p = pol(r, a1 + (a2 - a1) * u); d += (i ? "L" : "M") + p[0].toFixed(1) + " " + p[1].toFixed(1);
+      }
+      el(svg, "path", { class: "curve s" + PH[last.ph], "stroke-width": 3, opacity: 0.55, d });
+    }
+  }
+
+  // ---- levityskuva ----
+  function drawDeveloped() {
+    const svg = $("dev"); svg.textContent = "";
+    const { Q } = Wd, X0 = 30, X1 = 970, pitch = (X1 - X0) / Q, d = Math.min(4.5, pitch * 0.2), YT = 88, YB = 178;
+    const hv = 62 * Wd.y / Wd.tau * Math.min(1, 12 / Q * 1.6 + 0.2);
+    const xs = k => X0 + (k + 0.5) * pitch;
+    const gx = Math.min(4, pitch * 0.2), yn = YB + hv * (1 - gx / (Wd.y * pitch / 2 - d)), ys = YB + hv + 4;   // vyyhdenpään kärjen aukko ja johtimet
+    const defs = el(svg, "defs"), cp = el(defs, "clipPath", { id: "clip" });
+    el(cp, "rect", { x: X0, y: 0, width: X1 - X0, height: 302 });
+    el(svg, "rect", { x: X0, y: YT, width: X1 - X0, height: YB - YT, fill: "var(--iron)", stroke: "none" });
+    for (let k = 0; k < Q; k++) if (Q <= 36 || k % 2 === 0) el(svg, "text", { class: "num", x: xs(k) + d + 3, y: YT + 12, style: "font-size:10px" }, k + 1);
+    el(svg, "text", { class: "num", transform: `translate(16 ${YT - 34}) rotate(-90)`, "text-anchor": "middle", style: "font-size:10px" }, "etupääty");
+    el(svg, "text", { class: "num", transform: `translate(16 ${YB + 50}) rotate(-90)`, "text-anchor": "middle", style: "font-size:10px" }, "takapääty");
+    const g = el(svg, "g", { "clip-path": "url(#clip)" });
+    const last = order[S.n - 1];
+    for (const c of placed()) for (const sh of [0, Q]) {
+      const xi = xs(c.kin + sh) - d, xo = xs(c.kin + sh - Wd.y) + d, xm = (xi + xo) / 2, cls = "curve s" + PH[c.ph], w = c === last ? 2.6 : 1.4;
+      el(g, "path", { class: cls, "stroke-width": w, d: `M${xm} ${YT - hv} L${xi} ${YT} L${xi} ${YB} L${xm + gx} ${yn} L${xm + gx} ${ys}` });
+      el(g, "path", { class: cls, "stroke-width": w, "stroke-dasharray": "5 3", d: `M${xm} ${YT - hv} L${xo} ${YT} L${xo} ${YB} L${xm - gx} ${yn} L${xm - gx} ${ys}` });
+      const ym = (YT + YB) / 2;
+      arrowHead(g, xi, ym + (c.s > 0 ? -6 : 6), c.s > 0 ? Math.PI / 2 : -Math.PI / 2, "f" + PH[c.ph], 0.8);
+      arrowHead(g, xo, ym + (c.s > 0 ? 6 : -6), c.s > 0 ? -Math.PI / 2 : Math.PI / 2, "f" + PH[c.ph], 0.8);
+    }
+    // sarjakytkentä ja liittimet takapäädyssä
+    const lead = c => {
+      const wrap = x => X0 + mod(x - X0, X1 - X0), xm = xs(c.kin) - Wd.y * pitch / 2, top = wrap(xm + gx), bot = wrap(xm - gx);
+      return c.s > 0 ? { entry: top, exit: bot } : { entry: bot, exit: top };
+    };
+    const yb = 279;
+    for (let ph = 0; ph < 3; ph++) for (const cn of chainLinks(ph)) {
+      const cls = "curve s" + PH[ph];
+      if (cn.to) {
+        const xa = lead(cn.from).exit, xb = lead(cn.to).entry, yl = cn.from.group === cn.to.group ? YB + hv + 8 : YB + hv + 16 + ph * 7;
+        const wrap = Math.abs(xb - xa) > (X1 - X0) / 2, ea = xa < xb ? X0 : X1, eb = xa < xb ? X1 : X0;
+        el(svg, "path", { class: cls, "stroke-width": 1.2, d: wrap
+          ? `M${xa} ${ys} L${xa} ${yl} L${ea} ${yl} M${eb} ${yl} L${xb} ${yl} L${xb} ${ys}`
+          : `M${xa} ${ys} L${xa} ${yl} L${xb} ${yl} L${xb} ${ys}` });
+      } else {
+        const x = lead(cn.coil)[cn.end];
+        el(svg, "path", { class: cls, "stroke-width": 1.2, d: `M${x} ${ys} L${x} ${yb}` });
+        el(svg, "circle", { class: "s" + PH[ph], fill: "var(--panel)", cx: x, cy: yb + 3, r: 3 });
+        el(svg, "text", { class: "f" + PH[ph], x, y: yb + 20, "text-anchor": "middle" }, cn.name);
+      }
+    }
+  }
+
+  // ---- kolmiulotteinen kuva ----
+  // Koneen akseli on z. Etupääty (z > 0) on poikkileikkauskuvan katsojan puolella. Kytkennät ja liittimet ovat takapäädyssä (z < 0).
+  const G = { Rb: 1, r1: 1.09, r2: 1.25, Ro: 1.62, L: 1.5 };
+  const cyl = (r, a, z) => [r * Math.cos(a), r * Math.sin(a), z];
+  function overhang() { return 0.17 * Wd.y * Wd.gm * 1.17 + 0.05; }
+  const noseGap = () => Math.min(0.09, 0.4 * Wd.gm) / (2 * Wd.y * Wd.gm);   // kärjen aukon puolikas vyyhdenpään parametrina
+  function endPoint(aIn, aOut, sign, u) {        // vyyhdenpään piste [r, kulma, z], u = 0 ilmavälin puoleisessa sivussa ja 1 uran pohjalla olevassa sivussa
+    const v = Math.min(1, Math.max(0, (u - 0.42) / 0.16));
+    return [G.r1 + (G.r2 - G.r1) * v * v * (3 - 2 * v), aIn + (aOut - aIn) * u, sign * (G.L / 2 + 0.07 + overhang() * (1 - Math.abs(2 * u - 1)))];
+  }
+  function endTurn(aIn, aOut, sign, u0, u1) {
+    const pts = [], n = 18;
+    for (let i = 0; i <= n; i++) pts.push(cyl(...endPoint(aIn, aOut, sign, u0 + (u1 - u0) * i / n)));
+    return pts;
+  }
+  // Vyyhti on avoin silmukka: se alkaa ja päättyy takapäädyn vyyhdenpään kärkeen, josta sen kaksi johdinta lähtevät.
+  function coilPath(c) {
+    const aIn = Wd.angle(c.kin), aOut = aIn - Wd.y * Wd.gm, e = noseGap();
+    return [...endTurn(aIn, aOut, -1, 0.5 - e, 0), cyl(G.r1, aIn, -G.L / 2), cyl(G.r1, aIn, G.L / 2), ...endTurn(aIn, aOut, 1, 0, 1),
+      cyl(G.r2, aOut, G.L / 2), cyl(G.r2, aOut, -G.L / 2), ...endTurn(aIn, aOut, -1, 1, 0.5 + e)];
+  }
+  function leads(c) {                            // virta tulee + vyyhteen ilmavälin puoleisen sivun johtimesta ja - vyyhteen uran pohjan sivun johtimesta
+    const aIn = Wd.angle(c.kin), aOut = aIn - Wd.y * Wd.gm, e = noseGap();
+    const top = endPoint(aIn, aOut, -1, 0.5 - e), bot = endPoint(aIn, aOut, -1, 0.5 + e);
+    return c.s > 0 ? { entry: top, exit: bot } : { entry: bot, exit: top };
+  }
+  function termPath(c, end) {                    // liitinjohdin vyyhden johtimesta staattorin ulkopuolelle
+    const p = leads(c)[end], z = -(G.L / 2 + overhang()) - 0.6;
+    return [cyl(...p), cyl(p[0], p[1], z), cyl(G.Ro + 0.25, p[1] + (end === "entry" ? 0.13 : -0.13), z)];
+  }
+  function connPaths(ph) {                       // sarjakytkentä ja liittimet takapäädyssä
+    const z0 = -(G.L / 2 + overhang()), out = [];
+    for (const cn of chainLinks(ph)) {
+      if (cn.to) {
+        const p = leads(cn.from).exit, q = leads(cn.to).entry, z = cn.from.group === cn.to.group ? z0 - 0.17 : z0 - 0.3 - 0.09 * ph;
+        let a2 = q[1]; while (a2 - p[1] > Math.PI) a2 -= TAU; while (a2 - p[1] < -Math.PI) a2 += TAU;
+        const pts = [cyl(...p)], n = Math.max(2, Math.ceil(Math.abs(a2 - p[1]) / 0.12));
+        for (let i = 0; i <= n; i++) pts.push(cyl(p[0] + (q[0] - p[0]) * i / n, p[1] + (a2 - p[1]) * i / n, z));
+        pts.push(cyl(...q)); out.push({ pts });
+      } else {
+        out.push({ pts: termPath(cn.coil, cn.end), label: cn.name });
+      }
+    }
+    return out;
+  }
+  const cv = $("view3d"), ctx = cv.getContext("2d");
+  let W = 0, H = 0;
+  function draw3d() {
+    if (!W) return;
+    const col = { ink: css("--ink"), muted: css("--muted"), iron: css("--iron"), rule: css("--rule"), ph: [css("--pa"), css("--pb"), css("--pc")] };
+    ctx.clearRect(0, 0, W, H);
+    const cy = Math.cos(S.cam.yaw), sy = Math.sin(S.cam.yaw), cp = Math.cos(S.cam.pitch), sp = Math.sin(S.cam.pitch);
+    const ext = Math.max(G.Ro + 0.35, G.L / 2 + overhang() + 0.75), D = 9; let sc = Math.min(W, H) / 2 / ext * 0.86;
+    const proj = p => {
+      const x = p[0] * cy + p[2] * sy, z1 = -p[0] * sy + p[2] * cy, y = p[1] * cp - z1 * sp, z = p[1] * sp + z1 * cp, k = D / (D - z);
+      return [W / 2 + sc * x * k, H / 2 - sc * y * k, z];
+    };
+    let fit = 1;                                   // pienennä kuvaa, jos liittimet eivät muuten mahdu
+    for (const g of Wd.phases) { const ch = g.flatMap(x => x.coils); for (const [c, end] of [[ch[0], "entry"], [ch[ch.length - 1], "exit"]]) {
+      const p = proj(termPath(c, end)[2]); fit = Math.max(fit, Math.abs(p[0] - W / 2) / (W / 2 - 26), Math.abs(p[1] - H / 2) / (H / 2 - 26));
+    } }
+    sc /= fit;
+    const items = [];                              // {z, draw}
+    const seg = (a, b, color, width, alpha = 1, dash) => {
+      const p = proj(a), q = proj(b);
+      items.push({ z: (p[2] + q[2]) / 2, draw() { ctx.globalAlpha = alpha * (0.62 + 0.38 * Math.min(1, Math.max(0, ((p[2] + q[2]) / 2 + ext) / (2 * ext)))); ctx.strokeStyle = color; ctx.lineWidth = width; ctx.setLineDash(dash || []); ctx.beginPath(); ctx.moveTo(p[0], p[1]); ctx.lineTo(q[0], q[1]); ctx.stroke(); } });
+    };
+    const poly = (pts, color, width, alpha, dash) => { for (let i = 0; i + 1 < pts.length; i++) seg(pts[i], pts[i + 1], color, width, alpha, dash); };
+    // staattorin runko: päätypinnat, poraus ja urat
+    const NC = 72;
+    for (const z of [-G.L / 2, G.L / 2]) {
+      const ring = r => { const a = []; for (let i = 0; i <= NC; i++) a.push(proj(cyl(r, i / NC * TAU, z))); return a; };
+      const o = ring(G.Ro), b = ring(G.Rb), zc = proj([0, 0, z])[2];
+      items.push({ z: zc - 0.01, draw() {
+        ctx.globalAlpha = 0.38; ctx.fillStyle = col.iron; ctx.beginPath();
+        o.forEach((p, i) => i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1])); ctx.closePath();
+        b.forEach((p, i) => i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1])); ctx.closePath(); ctx.fill("evenodd");
+        ctx.globalAlpha = 1; ctx.strokeStyle = col.ink; ctx.lineWidth = 1; ctx.setLineDash([]);
+        for (const r of [o, b]) { ctx.beginPath(); r.forEach((p, i) => i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1])); ctx.stroke(); }
+      } });
+    }
+    for (let k = 0; k < Wd.Q; k++) {               // urat: suu porauksessa ja pohja
+      const a = Wd.angle(k), hw = Math.min(0.09, Wd.gm * 0.3);
+      for (const da of [-hw, hw]) seg(cyl(G.Rb, a + da, -G.L / 2), cyl(G.Rb, a + da, G.L / 2), col.muted, 0.7, 0.8);
+      poly([cyl(G.Rb, a - hw, G.L / 2), cyl(G.r2 + 0.09, a - hw, G.L / 2), cyl(G.r2 + 0.09, a + hw, G.L / 2), cyl(G.Rb, a + hw, G.L / 2)], col.muted, 0.7, 0.8);
+    }
+    for (let i = 0; i < 12; i++) seg(cyl(G.Ro, i / 12 * TAU, -G.L / 2), cyl(G.Ro, i / 12 * TAU, G.L / 2), col.rule, 0.7, 1);
+    // vyyhdet
+    const last = order[S.n - 1];
+    for (const c of placed()) poly(coilPath(c), col.ph[c.ph], c === last ? 4.2 : 2.4, 1);
+    // kytkennät
+    const labels = [];
+    for (let ph = 0; ph < 3; ph++) for (const cpth of connPaths(ph)) {
+      poly(cpth.pts, col.ph[ph], 1.5, 1);
+      if (cpth.label) { const p = proj(cpth.pts[cpth.pts.length - 1]); labels.push([p, cpth.label, col.ph[ph]]); }
+    }
+    items.sort((a, b) => a.z - b.z).forEach(it => it.draw());
+    ctx.globalAlpha = 1; ctx.setLineDash([]);
+    ctx.font = "15px " + css("--font-math"); ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    for (const [p, name, color] of labels) {
+      ctx.fillStyle = css("--panel"); ctx.strokeStyle = color; ctx.lineWidth = 1.3; ctx.beginPath(); ctx.arc(p[0], p[1], 3, 0, TAU); ctx.fill(); ctx.stroke();
+      const dx = p[0] - W / 2, dy = p[1] - H / 2, n = Math.hypot(dx, dy) || 1;
+      ctx.fillStyle = color; ctx.fillText(name, p[0] + 13 * dx / n, p[1] + 13 * dy / n);
+    }
+  }
+  function resize() {
+    const dpr = window.devicePixelRatio || 1, r = cv.getBoundingClientRect(); W = r.width; H = r.height;
+    cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); draw3d();
+  }
+  let drag = null;
+  cv.addEventListener("pointerdown", e => { drag = { x: e.clientX, y: e.clientY, yaw: S.cam.yaw, pitch: S.cam.pitch }; cv.setPointerCapture(e.pointerId); });
+  cv.addEventListener("pointermove", e => {
+    if (!drag) return;
+    S.cam.yaw = drag.yaw + (e.clientX - drag.x) * 0.01;
+    S.cam.pitch = Math.max(-1.5, Math.min(1.5, drag.pitch + (e.clientY - drag.y) * 0.01));
+    press("[data-cam]", null); draw3d();
+  });
+  cv.addEventListener("pointerup", () => { drag = null; });
+  cv.addEventListener("pointercancel", () => { drag = null; });
+  const CAMS = { front: { yaw: 0, pitch: 0 }, obl: { yaw: 0.6, pitch: 0.28 }, back: { yaw: Math.PI - 0.5, pitch: 0.28 } };
+
+  // ---- päivitys ja säätimet ----
+  const press = (sel, b) => document.querySelectorAll(sel).forEach(x => x.setAttribute("aria-pressed", x === b));
+  function update() {
+    build();
+    press("[data-p]", document.querySelector(`[data-p="${S.np}"]`));
+    press("[data-q]", document.querySelector(`[data-q="${S.q}"]`));
+    press("[data-sh]", document.querySelector(`[data-sh="${S.sh}"]`));
+    document.querySelectorAll("[data-sh]").forEach(b => { b.disabled = +b.dataset.sh > S.q; b.style.opacity = b.disabled ? 0.4 : 1; });
+    const { Q, tau, y, np } = Wd;
+    $("tQ").textContent = `${Q}`;
+    $("tTau").textContent = `${tau} uraa = ${fmt(180 / np)}°`;
+    $("tY").textContent = `${y} uraa = ${fmt(y * 180 / tau / np, (y * 180 / tau / np) % 1 ? 1 : 0)}°`;
+    $("tG").textContent = `${2 * np}`;
+    $("tN").textContent = `${fmt(3000 / np)} r/min`;
+    const last = order[S.n - 1];
+    $("status").innerHTML = !order.length ? "Valitse vähintään yksi vaihe."
+      : !last ? `Staattori on tyhjä. Lisää ensimmäinen vyyhti. Vyyhtejä on ${order.length}.`
+      : `Vyyhti ${S.n}/${order.length}: vaihe ${PH[last.ph]}, sivu uran ${last.kin + 1} ilmavälin puolella ja uran ${last.kout + 1} pohjalla.` + (S.n === order.length ? " Käämitys on valmis." : "");
+    $("prev").disabled = S.n === 0; $("next").disabled = S.n >= order.length;
+    drawSection(); drawDeveloped(); draw3d();
+  }
+  const stopAuto = () => { if (S.timer) { clearInterval(S.timer); S.timer = null; $("auto").textContent = "Toista"; } };
+  document.querySelectorAll("[data-p]").forEach(b => b.addEventListener("click", () => { S.np = +b.dataset.p; update(); }));
+  document.querySelectorAll("[data-q]").forEach(b => b.addEventListener("click", () => { S.q = +b.dataset.q; update(); }));
+  document.querySelectorAll("[data-sh]").forEach(b => b.addEventListener("click", () => { S.sh = +b.dataset.sh; update(); }));
+  document.querySelectorAll("[data-cam]").forEach(b => b.addEventListener("click", () => { S.cam = Object.assign({}, CAMS[b.dataset.cam]); press("[data-cam]", b); draw3d(); }));
+  ["pha", "phb", "phc", "conn"].forEach(id => $(id).addEventListener("change", () => { if (id !== "conn") S.n = 1e9; update(); }));
+  $("next").addEventListener("click", () => { stopAuto(); S.n++; update(); });
+  $("prev").addEventListener("click", () => { stopAuto(); S.n--; update(); });
+  $("all").addEventListener("click", () => { stopAuto(); S.n = 1e9; update(); });
+  $("auto").addEventListener("click", () => {
+    if (S.timer) return stopAuto();
+    if (S.n >= order.length) S.n = 0;
+    $("auto").textContent = "Pysäytä"; update();
+    S.timer = setInterval(() => { if (S.n >= order.length) return stopAuto(); S.n++; update(); }, 900);
+  });
+
+  // Alkutila osoitteesta, esim. urakaamitys.html#np=2&q=2&sh=1&n=5&cam=back
+  const hp = new URLSearchParams(location.hash.slice(1));
+  if (hp.has("np")) S.np = Math.min(3, Math.max(1, +hp.get("np")));
+  if (hp.has("q")) S.q = Math.min(3, Math.max(1, +hp.get("q")));
+  if (hp.has("sh")) S.sh = Math.min(2, Math.max(0, +hp.get("sh")));
+  if (hp.has("ph")) for (const c of PH) $("ph" + c).checked = hp.get("ph").includes(c);
+  S.n = hp.has("n") ? +hp.get("n") : 1;
+  if (CAMS[hp.get("cam")]) S.cam = Object.assign({}, CAMS[hp.get("cam")]);
+  press("[data-cam]", document.querySelector(`[data-cam="${hp.get("cam") || "obl"}"]`));
+
+  update();
+  new ResizeObserver(resize).observe(cv);
+  window.matchMedia("(prefers-color-scheme: dark)").addEventListener?.("change", update);
+  new MutationObserver(update).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+  (document.fonts ? document.fonts.ready : Promise.resolve()).then(draw3d);
+})();
+</script>
+</body>
+</html>
