@@ -2,7 +2,7 @@
 
 [![CC BY-NC 4.0][cc-by-nc-shield]][cc-by-nc] 
 
-Tämä teos on lisensoitu [Creative Commons Nimeä-EiKaupallinen 4.0 Kansainvälinen -käyttöluvalla][cc-by-nc].
+Tämä teos ja animaatiot on lisensoitu [Creative Commons Nimeä-EiKaupallinen 4.0 Kansainvälinen -käyttöluvalla][cc-by-nc].
 
 [![CC BY-NC 4.0][cc-by-nc-image]][cc-by-nc]
 
@@ -14,13 +14,13 @@ Tämä luentomoniste on laadittu Aalto-yliopiston kurssin *ELEC-C8003 Sähköene
 
 ## Animaatiot
 
-Kirjan tueksi on tehty interaktiivisia animaatioita. Ne avautuvat selaimessa ilman asennuksia ja toimivat parhaiten tietokoneella. Jokaisessa animaatiossa on tehtäviä vastauksineen. Syventävät animaatiot eivät kuulu kurssin koealueeseen. Myös animaatiot on lisensoitu samalla Creative Commons Nimeä-EiKaupallinen 4.0 -käyttöluvalla.
+Kirjan tueksi on tehty interaktiivisia animaatioita. Ne avautuvat selaimessa ilman asennuksia ja toimivat parhaiten tietokoneella. Jokaisessa animaatiossa on tehtäviä vastauksineen. Syventävät animaatiot eivät kuulu kurssin koealueeseen.
 
 | Animaatio | Kirjan luku |
 | --- | --- |
 | [Tasasähkökatkoja ja pulssinleveysmodulointi](https://aalto-electric-drives.github.io/muunnostekniikka/animaatiot/katkoja.html) | 6 |
 | [Avaruusvektori ja pyörivä kenttä](https://aalto-electric-drives.github.io/muunnostekniikka/animaatiot/avaruusvektori.html) | 11 ja 12 |
 | [Urakäämitys: vyyhdet ja vyyhdenpäät](https://aalto-electric-drives.github.io/muunnostekniikka/animaatiot/urakaamitys.html) | 11 |
-| [Urakäämityksen yliaallot](https://aalto-electric-drives.github.io/muunnostekniikka/animaatiot/kaamityksen_yliaallot.html) | 11, syventävä |
-| [Kolmivaiheinen suuntaaja ja pulssinleveysmodulointi](https://aalto-electric-drives.github.io/muunnostekniikka/animaatiot/vaihtosuuntaaja.html) | 13, syventävä |
-| [Kestomagnetoidun tahtikoneen vektorisäätö](https://aalto-electric-drives.github.io/muunnostekniikka/animaatiot/vektorisaato.html) | 14, syventävä |
+| [Urakäämityksen yliaallot](https://aalto-electric-drives.github.io/muunnostekniikka/animaatiot/kaamityksen_yliaallot.html) | 11 |
+| [Kolmivaiheinen suuntaaja ja pulssinleveysmodulointi](https://aalto-electric-drives.github.io/muunnostekniikka/animaatiot/vaihtosuuntaaja.html) | 13 |
+| [Kestomagnetoidun tahtikoneen vektorisäätö](https://aalto-electric-drives.github.io/muunnostekniikka/animaatiot/vektorisaato.html) | 14 |
